@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Context7__resolve-library-id",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Read(//Users/luciano/.claude/**)",
+      "Read(//Users/luciano/.config/claude/**)",
+      "Bash(pnpm install:*)",
+      "Bash(npx shadcn@latest add button input label card badge avatar separator skeleton dialog form select table dropdown-menu sidebar sonner --yes)",
+      "Bash(pnpm --filter @repo/app typecheck)"
+    ]
+  }
+}

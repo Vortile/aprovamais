@@ -1,0 +1,261 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FileUp, Loader2 } from "lucide-react";
+import { z } from "zod";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { createMaterial } from "@/lib/actions/materiais";
+
+const schema = z.object({
+  title: z.string().min(1, "Informe o título"),
+  description: z.string(),
+  subject: z.string(),
+  grade_level: z.string(),
+});
+
+type FormValues = z.infer<typeof schema>;
+
+export function MaterialForm({ onSuccess }: { onSuccess: () => void }) {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      title: "",
+      description: "",
+      subject: "",
+      grade_level: "",
+    },
+  });
+
+  function handleFileSelection(file: File | null) {
+    setSelectedFile(file);
+  }
+
+  async function uploadFile(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/material-upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const payload = (await response.json()) as {
+      ok: boolean;
+      path?: string;
+      error?: string;
+    };
+
+    if (!response.ok || !payload.ok || !payload.path) {
+      throw new Error(payload.error ?? "Não foi possível enviar o arquivo.");
+    }
+
+    return payload.path;
+  }
+
+  async function onSubmit(values: FormValues) {
+    if (!selectedFile) {
+      toast.error("Envie um arquivo para o material.");
+      return;
+    }
+
+    setIsUploading(true);
+
+    let filePath: string;
+
+    try {
+      filePath = await uploadFile(selectedFile);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível enviar o arquivo.",
+      );
+      setIsUploading(false);
+      return;
+    }
+
+    const result = await createMaterial({
+      title: values.title,
+      description: values.description,
+      filePath,
+      subject: values.subject,
+      gradeLevel: values.grade_level,
+    });
+
+    setIsUploading(false);
+
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success(result.message);
+    router.refresh();
+    onSuccess();
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Título *</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Ex: Lista de Exercícios — Cap. 3"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <FormField
+            control={form.control}
+            name="subject"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Disciplina</FormLabel>
+                <FormControl>
+                  <Input placeholder="Matemática" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="grade_level"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Série</FormLabel>
+                <FormControl>
+                  <Input placeholder="8º Ano" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Descrição</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Breve descrição do material..."
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormItem>
+          <FormLabel>Arquivo *</FormLabel>
+          <FormControl>
+            <div
+              role="button"
+              tabIndex={0}
+              className={`rounded-lg border border-dashed p-6 text-center transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"}`}
+              onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setIsDragging(false);
+                handleFileSelection(event.dataTransfer.files[0] ?? null);
+              }}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={(event) =>
+                  handleFileSelection(event.target.files?.[0] ?? null)
+                }
+              />
+              <div className="flex flex-col items-center gap-3">
+                <div className="rounded-full bg-muted p-3">
+                  <FileUp className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">
+                    Arraste o arquivo aqui ou clique para selecionar
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    O material será enviado para o bucket aprova+ no Supabase
+                    Storage.
+                  </p>
+                </div>
+                {selectedFile ? (
+                  <p className="text-sm text-foreground">
+                    {selectedFile.name} ·{" "}
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </FormControl>
+          <FormDescription>
+            O link manual foi removido. Agora o arquivo sobe direto para o
+            Storage.
+          </FormDescription>
+          {!selectedFile ? (
+            <FormMessage>Envie um arquivo para continuar.</FormMessage>
+          ) : null}
+        </FormItem>
+        <div className="flex justify-end pt-2">
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting || isUploading}
+          >
+            {form.formState.isSubmitting || isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              "Salvar"
+            )}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
