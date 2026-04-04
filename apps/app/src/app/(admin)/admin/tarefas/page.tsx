@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { Database } from "@repo/db";
+import { TABLES, type Database } from "@repo/db";
 import { getMaterialDownloadUrl } from "@/lib/materials";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { TarefasClient } from "./tarefas-client";
@@ -53,17 +53,17 @@ export default async function TarefasPage() {
   const [{ data: tarefas }, { data: alunos }, { data: materiais }] =
     await Promise.all([
       supabase
-        .from("tarefas")
+        .from(TABLES.TAREFAS)
         .select(
           "id, title, description, due_date, created_at, materiais(id, title, subject, file_url), tarefa_alunos(id, status, student_notes, submission_url, submitted_at, reviewed_at, teacher_feedback, alunos(id, profiles(full_name)))",
         )
         .order("created_at", { ascending: false }),
       supabase
-        .from("alunos")
+        .from(TABLES.ALUNOS)
         .select("id, grade, profiles(full_name)")
         .order("created_at", { ascending: false }),
       supabase
-        .from("materiais")
+        .from(TABLES.MATERIAIS)
         .select("id, title, subject, file_url")
         .order("created_at", { ascending: false }),
     ]);

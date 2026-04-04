@@ -1,40 +1,41 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasAppEnv } from "@/lib/supabase/env";
+import { ROUTES } from "@/lib/routes";
 
 type MiddlewareAuth = () => Promise<{ userId: string | null }>;
 
 async function handleAppMiddleware(auth: MiddlewareAuth, request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isSetupRoute = pathname === "/setup";
-  const isLoginRoute = pathname === "/login";
-  const isSignInRoute = pathname.startsWith("/sign-in");
-  const isSignUpRoute = pathname.startsWith("/sign-up");
-  const isDashboardRoute = pathname === "/dashboard";
+  const isSetupRoute = pathname === ROUTES.SETUP;
+  const isLoginRoute = pathname === ROUTES.LOGIN;
+  const isSignInRoute = pathname.startsWith(ROUTES.SIGN_IN);
+  const isSignUpRoute = pathname.startsWith(ROUTES.SIGN_UP);
+  const isDashboardRoute = pathname === ROUTES.DASHBOARD;
   const isAdminRoute = pathname.startsWith("/admin");
   const isAlunoRoute = pathname.startsWith("/aluno");
   const isProtectedRoute = isAdminRoute || isAlunoRoute || isDashboardRoute;
 
   if (!hasAppEnv()) {
     if (!isSetupRoute) {
-      return NextResponse.redirect(new URL("/setup", request.url));
+      return NextResponse.redirect(new URL(ROUTES.SETUP, request.url));
     }
 
     return NextResponse.next({ request });
   }
 
   if (isSetupRoute) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL(ROUTES.DASHBOARD, request.url));
   }
 
   const authState = await auth();
 
   if (!authState.userId && isProtectedRoute) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+    return NextResponse.redirect(new URL(ROUTES.SIGN_IN, request.url));
   }
 
   if (authState.userId && (isLoginRoute || isSignInRoute || isSignUpRoute)) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL(ROUTES.DASHBOARD, request.url));
   }
 
   return NextResponse.next({ request });

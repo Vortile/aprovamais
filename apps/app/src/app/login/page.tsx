@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { hasAppEnv } from "@/lib/supabase/env";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Entrar | Plataforma do Professor",
@@ -8,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   if (!hasAppEnv()) {
-    redirect("/setup");
+    redirect(ROUTES.SETUP);
   }
 
-  redirect("/sign-in");
+  redirect(ROUTES.SIGN_IN);
 }

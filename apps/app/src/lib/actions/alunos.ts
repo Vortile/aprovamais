@@ -4,11 +4,13 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
-import type { Database } from "@repo/db";
+import { TABLES, type Database } from "@repo/db";
 import { getCurrentAppSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getClerkRole, normalizeEmail } from "@/lib/supabase/env";
+import { normalizeEmail, ROLES } from "@/lib/supabase/env";
 import { asSupabaseInsert, asSupabaseUpdate } from "@/lib/supabase/typed";
+import { ROUTES } from "@/lib/routes";
+import { ACTION_ERRORS } from "@/lib/errors";
 
 const saveAlunoSchema = z.object({
   alunoId: z.string().uuid().optional(),
@@ -54,16 +56,19 @@ type ClerkUserRecord = {
   }>;
 };
 
-async function assertAdminAccess() {
+async function assertStaffAccess() {
   const session = await getCurrentAppSession();
 
   if (!session) {
-    return { error: "Sua sessão expirou. Entre novamente." } as const;
+    return { error: ACTION_ERRORS.SESSION_EXPIRED } as const;
   }
 
-  if (session.profile.role !== "admin") {
+  if (
+    session.profile.role !== ROLES.ADMIN &&
+    session.profile.role !== ROLES.PROFESSOR
+  ) {
     return {
-      error: "Apenas administradores podem gerenciar contas de alunos.",
+      error: "Apenas professores e administradores podem gerenciar alunos.",
     } as const;
   }
 
@@ -97,8 +102,8 @@ function getPrimaryEmail(user: ClerkUserRecord) {
   );
 }
 
-function isAlunoRole(value: unknown) {
-  return getClerkRole(value) === "aluno";
+function isStudentRole(value: unknown) {
+  return value === ROLES.ALUNO;
 }
 
 async function getAppOrigin() {
@@ -123,7 +128,7 @@ async function getAppOrigin() {
 async function findAluno(alunoId: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
-    .from("alunos")
+    .from(TABLES.ALUNOS)
     .select(
       "id, profile_id, plan_id, contact_email, profiles(id, clerk_user_id, email, full_name, role)",
     )
@@ -140,7 +145,7 @@ async function findAluno(alunoId: string) {
 async function findProfileByEmail(normalizedEmail: string) {
   const supabase = createAdminClient();
   const { data } = await supabase
-    .from("profiles")
+    .from(TABLES.PROFILES)
     .select("*")
     .ilike("email", normalizedEmail)
     .limit(1);
@@ -151,7 +156,7 @@ async function findProfileByEmail(normalizedEmail: string) {
 async function findProfileByClerkUserId(clerkUserId: string) {
   const supabase = createAdminClient();
   const { data } = await supabase
-    .from("profiles")
+    .from(TABLES.PROFILES)
     .select("*")
     .eq("clerk_user_id", clerkUserId)
     .limit(1);
@@ -174,7 +179,7 @@ async function upsertAlunoProfile({
 
   if (currentProfileId) {
     const { data, error } = await supabase
-      .from("profiles")
+      .from(TABLES.PROFILES)
       .update(
         asSupabaseUpdate<"profiles">({
           clerk_user_id: clerkUserId,
@@ -204,7 +209,7 @@ async function upsertAlunoProfile({
 
   if (existingProfile) {
     const { data, error } = await supabase
-      .from("profiles")
+      .from(TABLES.PROFILES)
       .update(
         asSupabaseUpdate<"profiles">({
           clerk_user_id: clerkUserId,
@@ -225,7 +230,7 @@ async function upsertAlunoProfile({
   }
 
   const { data, error } = await supabase
-    .from("profiles")
+    .from(TABLES.PROFILES)
     .insert(
       asSupabaseInsert<"profiles">({
         id: crypto.randomUUID(),
@@ -298,10 +303,7 @@ async function syncClerkUser({
 
   await client.users.updateUser(user.id, {
     ...splitFullName(fullName),
-    publicMetadata: {
-      ...user.publicMetadata,
-      role: "aluno",
-    },
+    privateMetadata: { role: "aluno" },
   });
 }
 
@@ -331,6 +333,9 @@ async function createAlunoInvitation(
 
   await revokePendingInvitations(normalizedEmail);
 
+  // publicMetadata.role is a hint for the invitation flow.
+  // When the student signs up and an admin saves their record,
+  // privateMetadata.role will be set authoritatively via syncClerkUser.
   await client.invitations.createInvitation({
     emailAddress: normalizedEmail,
     ignoreExisting: true,
@@ -357,7 +362,7 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
     return { ok: false, error: "Dados inválidos para salvar o aluno." };
   }
 
-  const adminAccess = await assertAdminAccess();
+  const adminAccess = await assertStaffAccess();
 
   if ("error" in adminAccess) {
     return {
@@ -426,7 +431,14 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
 
     if (
       matchedClerkUser &&
-      !isAlunoRole(matchedClerkUser.publicMetadata.role)
+      !isStudentRole(matchedClerkUser.publicMetadata.role) &&
+      !isStudentRole(
+        (
+          matchedClerkUser as unknown as {
+            privateMetadata: Record<string, unknown>;
+          }
+        ).privateMetadata?.role,
+      )
     ) {
       return {
         ok: false,
@@ -468,7 +480,7 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
     }
   } else if (currentAluno?.profile_id) {
     const { error } = await supabase
-      .from("profiles")
+      .from(TABLES.PROFILES)
       .update(
         asSupabaseUpdate<"profiles">({
           full_name: fullName,
@@ -486,7 +498,7 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
 
   if (values.data.alunoId) {
     const { error } = await supabase
-      .from("alunos")
+      .from(TABLES.ALUNOS)
       .update(
         asSupabaseUpdate<"alunos">({
           profile_id: profileId,
@@ -503,7 +515,8 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
       return { ok: false, error: "Não foi possível atualizar o aluno." };
     }
   } else {
-    const { error } = await supabase.from("alunos").insert(
+    const isProfessor = adminAccess.session.profile.role === ROLES.PROFESSOR;
+    const { error } = await supabase.from(TABLES.ALUNOS).insert(
       asSupabaseInsert<"alunos">({
         profile_id: profileId,
         plan_id: planId,
@@ -511,6 +524,7 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
         grade: values.data.grade,
         subject_focus: subjectFocus,
         notes: values.data.notes,
+        professor_id: isProfessor ? adminAccess.session.profile.id : null,
       }),
     );
 
@@ -519,7 +533,7 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
     }
   }
 
-  revalidatePath("/admin/alunos");
+  revalidatePath(ROUTES.ADMIN.ALUNOS);
   return { ok: true, message: successMessage };
 }
 
@@ -528,7 +542,7 @@ export async function deleteAluno(alunoId: string): Promise<DeleteAlunoResult> {
     return { ok: false, error: "Aluno inválido para exclusão." };
   }
 
-  const adminAccess = await assertAdminAccess();
+  const adminAccess = await assertStaffAccess();
 
   if ("error" in adminAccess) {
     return {
@@ -565,7 +579,7 @@ export async function deleteAluno(alunoId: string): Promise<DeleteAlunoResult> {
   }
 
   const { error: deleteAlunoError } = await supabase
-    .from("alunos")
+    .from(TABLES.ALUNOS)
     .delete()
     .eq("id", alunoId);
 
@@ -577,10 +591,10 @@ export async function deleteAluno(alunoId: string): Promise<DeleteAlunoResult> {
   }
 
   if (aluno.profile_id) {
-    await supabase.from("profiles").delete().eq("id", aluno.profile_id);
+    await supabase.from(TABLES.PROFILES).delete().eq("id", aluno.profile_id);
   }
 
-  revalidatePath("/admin/alunos");
+  revalidatePath(ROUTES.ADMIN.ALUNOS);
 
   return {
     ok: true,

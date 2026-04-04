@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { Database } from "@repo/db";
+import { TABLES, type Database } from "@repo/db";
 import { requireRole } from "@/lib/auth/session";
 import { getMaterialDownloadUrl } from "@/lib/materials";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -38,7 +38,7 @@ export default async function AlunoTarefasPage() {
   const supabase = createAdminClient();
 
   const { data: alunoRows } = await supabase
-    .from("alunos")
+    .from(TABLES.ALUNOS)
     .select("id")
     .eq("profile_id", session.profile.id)
     .limit(1);
@@ -59,7 +59,7 @@ export default async function AlunoTarefasPage() {
   }
 
   const { data: entregas } = await supabase
-    .from("tarefa_alunos")
+    .from(TABLES.TAREFA_ALUNOS)
     .select(
       "id, status, student_notes, submission_url, submitted_at, reviewed_at, teacher_feedback, created_at, tarefas(id, title, description, due_date, materiais(id, title, subject, file_url))",
     )

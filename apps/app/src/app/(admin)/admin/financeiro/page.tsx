@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { TABLES } from "@repo/db";
 import { FinanceiroClient } from "./financeiro-client";
 
 export const dynamic = "force-dynamic";
@@ -12,16 +13,16 @@ export default async function FinanceiroPage() {
   const [{ data: registros }, { data: planos }, { data: alunos }] =
     await Promise.all([
       supabase
-        .from("financeiro")
+        .from(TABLES.FINANCEIRO)
         .select("*, alunos(grade, plan_id, profiles(full_name))")
         .order("due_date", { ascending: false }),
       supabase
-        .from("planos")
+        .from(TABLES.PLANOS)
         .select("*")
         .order("active", { ascending: false })
         .order("monthly_amount", { ascending: true }),
       supabase
-        .from("alunos")
+        .from(TABLES.ALUNOS)
         .select("id, plan_id, profiles(full_name)")
         .order("created_at", { ascending: false }),
     ]);

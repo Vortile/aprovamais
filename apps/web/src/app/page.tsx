@@ -1,9 +1,43 @@
 import { MobileNav } from "@/components/mobile-nav";
 import { teacher, whatsappUrl, instagramUrl } from "@/lib/teacher";
+import { PlanosSection } from "@/components/planos-section";
 
 const { zcalUrl } = teacher;
 
-export default function WebHomePage() {
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+
+async function getPlanos() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/planos?active=eq.true&order=sort_order.asc,monthly_amount.asc`,
+      {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        next: { revalidate: 60 },
+      },
+    );
+    if (!res.ok) return [];
+    return res.json() as Promise<PlanoRow[]>;
+  } catch {
+    return [];
+  }
+}
+
+type PlanoRow = {
+  id: string;
+  name: string;
+  badge: string | null;
+  monthly_amount: number;
+  features: string[];
+  is_featured: boolean;
+  sort_order: number;
+};
+
+export default async function WebHomePage() {
+  const planos = await getPlanos();
   return (
     <>
       {/* ── Top Nav ── */}
@@ -275,140 +309,7 @@ export default function WebHomePage() {
         </section>
 
         {/* ── Planos ── */}
-        <section
-          className="py-24 px-6 bg-surface-container-highest"
-          id="planos"
-        >
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16 space-y-4">
-              <h2 className="text-3xl md:text-5xl font-headline font-bold text-on-surface">
-                Planos sob medida
-              </h2>
-              <p className="text-on-surface-variant">
-                Investimento mensal sem contrato de fidelidade. Pagamento via
-                Pix ou Cartão.
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
-              {/* Plan 1 */}
-              <div className="bg-surface p-8 rounded-3xl flex flex-col justify-between hover:shadow-xl transition-all">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
-                    Iniciante
-                  </span>
-                  <h3 className="text-2xl font-bold mt-2 mb-4">Base Inicial</h3>
-                  <div className="mb-6">
-                    <span className="text-3xl font-black text-primary">
-                      R$ 650
-                    </span>
-                    <span className="text-on-surface-variant">/mês</span>
-                  </div>
-                  <ul className="space-y-3 mb-8 text-sm">
-                    <li className="flex gap-2">✔ Fundamental</li>
-                    <li className="flex gap-2">✔ 2 matérias (Mat + Ing)</li>
-                    <li className="flex gap-2">✔ 2 aulas/semana (50min)</li>
-                  </ul>
-                </div>
-                <a
-                  className="block w-full text-center py-3 bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 transition-opacity"
-                  href={zcalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Contratar
-                </a>
-              </div>
-
-              {/* Plan 2 */}
-              <div className="bg-surface p-8 rounded-3xl flex flex-col justify-between hover:shadow-xl transition-all">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
-                    Focado
-                  </span>
-                  <h3 className="text-2xl font-bold mt-2 mb-4">Essencial</h3>
-                  <div className="mb-6">
-                    <span className="text-3xl font-black text-primary">
-                      R$ 700
-                    </span>
-                    <span className="text-on-surface-variant">/mês</span>
-                  </div>
-                  <ul className="space-y-3 mb-8 text-sm">
-                    <li className="flex gap-2">✔ Fís, Mat ou Inglês</li>
-                    <li className="flex gap-2">✔ 2 aulas/semana (60min)</li>
-                    <li className="flex gap-2">✔ Foco em 1 disciplina</li>
-                  </ul>
-                </div>
-                <a
-                  className="block w-full text-center py-3 bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 transition-opacity"
-                  href={zcalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Contratar
-                </a>
-              </div>
-
-              {/* Plan 3 — Featured */}
-              <div className="bg-primary text-on-primary p-8 rounded-3xl flex flex-col justify-between shadow-2xl relative overflow-hidden scale-105 z-10">
-                <div className="absolute top-4 right-4 bg-tertiary text-on-tertiary px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter">
-                  Mais Popular ⭐
-                </div>
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-widest opacity-80">
-                    Recomendado
-                  </span>
-                  <h3 className="text-2xl font-bold mt-2 mb-4">Avançado</h3>
-                  <div className="mb-6">
-                    <span className="text-3xl font-black">R$ 1.000</span>
-                    <span className="opacity-80">/mês</span>
-                  </div>
-                  <ul className="space-y-3 mb-8 text-sm">
-                    <li className="flex gap-2">✔ 2 disciplinas</li>
-                    <li className="flex gap-2">✔ 3 aulas/semana (60min)</li>
-                    <li className="flex gap-2">✔ Material de apoio</li>
-                  </ul>
-                </div>
-                <a
-                  className="block w-full text-center py-3 bg-tertiary text-on-tertiary rounded-xl font-bold hover:shadow-lg transition-all"
-                  href={zcalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Contratar
-                </a>
-              </div>
-
-              {/* Plan 4 */}
-              <div className="bg-surface p-8 rounded-3xl flex flex-col justify-between hover:shadow-xl transition-all">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
-                    Elite
-                  </span>
-                  <h3 className="text-2xl font-bold mt-2 mb-4">Premium</h3>
-                  <div className="mb-6">
-                    <span className="text-3xl font-black text-primary">
-                      R$ 1.300
-                    </span>
-                    <span className="text-on-surface-variant">/mês</span>
-                  </div>
-                  <ul className="space-y-3 mb-8 text-sm">
-                    <li className="flex gap-2">✔ 3 disciplinas</li>
-                    <li className="flex gap-2">✔ 4 aulas/semana (60min)</li>
-                    <li className="flex gap-2">✔ Suporte via WhatsApp</li>
-                  </ul>
-                </div>
-                <a
-                  className="block w-full text-center py-3 bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 transition-opacity"
-                  href={zcalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Contratar
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
+        <PlanosSection planos={planos} zcalUrl={zcalUrl} />
 
         {/* ── Depoimentos ── */}
         <section className="py-24 px-6 max-w-7xl mx-auto" id="depoimentos">

@@ -19,7 +19,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { PlanoForm } from "./plano-form";
+import { RegistroForm } from "./registro-form";
+import { marcarComoPago } from "@/lib/actions/financeiro";
 import type { Database } from "@repo/db";
 
 type Registro = Database["public"]["Tables"]["financeiro"]["Row"] & {
@@ -59,7 +63,22 @@ export function FinanceiroClient({
   planos: Plano[];
   alunos: AlunoResumo[];
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [registroOpen, setRegistroOpen] = useState(false);
+  const [markingPagoId, setMarkingPagoId] = useState<string | null>(null);
+
+  async function handleMarcarPago(id: string) {
+    setMarkingPagoId(id);
+    const result = await marcarComoPago(id);
+    setMarkingPagoId(null);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success(result.message);
+    router.refresh();
+  }
   const planById = new Map(planos.map((plan) => [plan.id, plan]));
   const alunosComPlano = alunos.filter((aluno) => aluno.plan_id);
   const alunosSemPlano = alunos.filter((aluno) => !aluno.plan_id);
@@ -223,11 +242,17 @@ export function FinanceiroClient({
       </div>
 
       <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold">Lançamentos</h2>
-          <p className="text-sm text-muted-foreground">
-            Histórico dos pagamentos registrados manualmente.
-          </p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Lançamentos</h2>
+            <p className="text-sm text-muted-foreground">
+              Histórico dos pagamentos registrados manualmente.
+            </p>
+          </div>
+          <Button size="sm" onClick={() => setRegistroOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" />
+            Novo Lançamento
+          </Button>
         </div>
         <div className="rounded-lg border bg-card overflow-hidden">
           <Table>
@@ -238,6 +263,7 @@ export function FinanceiroClient({
                 <TableHead>Vencimento</TableHead>
                 <TableHead>Pagamento</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -278,6 +304,20 @@ export function FinanceiroClient({
                         </Badge>
                       )}
                     </TableCell>
+                    <TableCell>
+                      {!r.paid_at && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={markingPagoId === r.id}
+                          onClick={() => void handleMarcarPago(r.id)}
+                        >
+                          {markingPagoId === r.id
+                            ? "Salvando..."
+                            : "Marcar como pago"}
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -291,6 +331,18 @@ export function FinanceiroClient({
               <DialogTitle>Novo Plano</DialogTitle>
             </DialogHeader>
             <PlanoForm onSuccess={() => setOpen(false)} />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={registroOpen} onOpenChange={setRegistroOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Novo Lançamento</DialogTitle>
+            </DialogHeader>
+            <RegistroForm
+              alunos={alunos}
+              onSuccess={() => setRegistroOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>

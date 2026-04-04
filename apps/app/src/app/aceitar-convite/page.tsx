@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { hasAppEnv } from "@/lib/supabase/env";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Aceitar Convite | Plataforma do Professor",
@@ -39,7 +40,7 @@ export default async function AcceptInvitePage({
   searchParams: SearchParams;
 }) {
   if (!hasAppEnv()) {
-    redirect("/setup");
+    redirect(ROUTES.SETUP);
   }
 
   const params = appendClerkParams(await searchParams);
@@ -47,8 +48,8 @@ export default async function AcceptInvitePage({
     params.get("__clerk_ticket") ?? params.get("__clerk_invitation_token");
 
   if (!ticket) {
-    redirect("/sign-in");
+    redirect(ROUTES.SIGN_IN);
   }
 
-  redirect(`/sign-up?${params.toString()}`);
+  redirect(`${ROUTES.SIGN_UP}?${params.toString()}`);
 }

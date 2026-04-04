@@ -3,6 +3,7 @@ import { BookOpen, Download, FileText } from "lucide-react";
 import { getMaterialDownloadUrl } from "@/lib/materials";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { asSupabaseRows } from "@/lib/supabase/typed";
+import { TABLES } from "@repo/db";
 
 export const dynamic = "force-dynamic";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,7 @@ export default async function AlunoMateriaisPage() {
   const supabase = createAdminClient();
 
   const { data } = await supabase
-    .from("materiais")
+    .from(TABLES.MATERIAIS)
     .select("*")
     .order("created_at", { ascending: false });
 

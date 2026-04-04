@@ -94,8 +94,7 @@ export function ConfiguracoesClient({
         <CardHeader>
           <CardTitle>Aparência</CardTitle>
           <CardDescription>
-            Escolha se a plataforma deve abrir no tema claro ou seguir o
-            sistema.
+            Escolha entre tema claro, escuro ou seguir a preferência do sistema.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -110,6 +109,7 @@ export function ConfiguracoesClient({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="light">Claro</SelectItem>
+                <SelectItem value="dark">Escuro</SelectItem>
                 <SelectItem value="system">Sistema</SelectItem>
               </SelectContent>
             </Select>

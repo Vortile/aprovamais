@@ -1,3 +1,13 @@
-export { createBrowserClient, createServerClient } from "@supabase/ssr"
-export type { Database } from "./database.types"
-export type { SupabaseClient } from "@supabase/supabase-js"
+export { createBrowserClient, createServerClient } from "@supabase/ssr";
+export type { Database } from "./database.types";
+export type { SupabaseClient } from "@supabase/supabase-js";
+
+export const TABLES = {
+  PROFILES: "profiles",
+  ALUNOS: "alunos",
+  PLANOS: "planos",
+  MATERIAIS: "materiais",
+  FINANCEIRO: "financeiro",
+  TAREFAS: "tarefas",
+  TAREFA_ALUNOS: "tarefa_alunos",
+} as const satisfies Record<string, string>;

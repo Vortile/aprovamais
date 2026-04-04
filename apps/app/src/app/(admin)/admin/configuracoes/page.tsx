@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { requireRole } from "@/lib/auth/session";
+import { requireStaff } from "@/lib/auth/session";
 import { ConfiguracoesClient } from "./configuracoes-client";
 
 export const metadata: Metadata = { title: "Configurações | Admin" };
 
 export default async function ConfiguracoesPage() {
-  const session = await requireRole("admin");
+  const session = await requireStaff();
 
   return (
     <div className="space-y-6">

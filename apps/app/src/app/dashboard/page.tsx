@@ -1,18 +1,19 @@
 import { redirect } from "next/navigation";
 import { requireAppSession } from "@/lib/auth/session";
-import { hasAppEnv } from "@/lib/supabase/env";
+import { hasAppEnv, ROLES } from "@/lib/supabase/env";
+import { ROUTES } from "@/lib/routes";
 
 export default async function DashboardPage() {
   if (!hasAppEnv()) {
-    redirect("/setup");
+    redirect(ROUTES.SETUP);
   }
 
   const session = await requireAppSession();
   const role = session.profile.role;
 
-  if (role === "admin") {
-    redirect("/admin/alunos");
+  if (role === ROLES.ADMIN || role === ROLES.PROFESSOR) {
+    redirect(ROUTES.ADMIN.ALUNOS);
   }
 
-  redirect("/aluno/materiais");
+  redirect(ROUTES.ALUNO.MATERIAIS);
 }

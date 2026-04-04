@@ -2,13 +2,18 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import type { Database } from "@repo/db";
+import { TABLES, type Database } from "@repo/db";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getClerkRole, normalizeEmail } from "@/lib/supabase/env";
+import {
+  getRoleFromMetadata,
+  normalizeEmail,
+  type AppRole,
+  ROLES,
+} from "@/lib/supabase/env";
 import { asSupabaseInsert, asSupabaseUpdate } from "@/lib/supabase/typed";
+import { ROUTES } from "@/lib/routes";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
-type AppRole = ProfileRow["role"];
 
 export type AppSession = {
   clerkUserId: string;
@@ -47,7 +52,7 @@ async function findProfileByClerkOrEmail(
   const supabase = createAdminClient();
 
   const { data: byClerkRows } = await supabase
-    .from("profiles")
+    .from(TABLES.PROFILES)
     .select("*")
     .eq("clerk_user_id", clerkUserId)
     .limit(1);
@@ -59,7 +64,7 @@ async function findProfileByClerkOrEmail(
   }
 
   const { data: byEmailRows } = await supabase
-    .from("profiles")
+    .from(TABLES.PROFILES)
     .select("*")
     .ilike("email", normalizedEmail)
     .limit(1);
@@ -67,29 +72,10 @@ async function findProfileByClerkOrEmail(
   return (byEmailRows?.[0] as ProfileRow | undefined) ?? null;
 }
 
-async function inferRole(normalizedEmail: string | null) {
-  const supabase = createAdminClient();
-
-  if (normalizedEmail) {
-    const { data: alunosRows } = await supabase
-      .from("alunos")
-      .select("id")
-      .ilike("contact_email", normalizedEmail)
-      .limit(1);
-
-    if ((alunosRows?.length ?? 0) > 0) {
-      return "aluno" satisfies AppRole;
-    }
-  }
-
-  const { count } = await supabase
-    .from("profiles")
-    .select("id", { count: "exact", head: true })
-    .eq("role", "admin");
-
-  return count === 0
-    ? ("admin" satisfies AppRole)
-    : ("aluno" satisfies AppRole);
+function inferRoleFromMetadata(
+  user: NonNullable<Awaited<ReturnType<typeof currentUser>>>,
+): AppRole {
+  return getRoleFromMetadata(user.privateMetadata, user.publicMetadata);
 }
 
 async function linkAlunoProfile(
@@ -103,7 +89,7 @@ async function linkAlunoProfile(
   const supabase = createAdminClient();
 
   await supabase
-    .from("alunos")
+    .from(TABLES.ALUNOS)
     .update(
       asSupabaseUpdate<"alunos">({
         profile_id: profileId,
@@ -137,7 +123,7 @@ export async function getCurrentAppSession(): Promise<AppSession | null> {
   let profile = await findProfileByClerkOrEmail(userId, email);
 
   if (profile) {
-    const nextRole = getClerkRole(user.publicMetadata.role) ?? profile.role;
+    const nextRole = inferRoleFromMetadata(user);
     const shouldUpdate =
       profile.clerk_user_id !== userId ||
       normalizeEmail(profile.email) !== email ||
@@ -146,7 +132,7 @@ export async function getCurrentAppSession(): Promise<AppSession | null> {
 
     if (shouldUpdate) {
       const { data } = await supabase
-        .from("profiles")
+        .from(TABLES.PROFILES)
         .update(
           asSupabaseUpdate<"profiles">({
             clerk_user_id: userId,
@@ -162,10 +148,9 @@ export async function getCurrentAppSession(): Promise<AppSession | null> {
       profile = (data as ProfileRow | null) ?? profile;
     }
   } else {
-    const role =
-      getClerkRole(user.publicMetadata.role) ?? (await inferRole(email));
+    const role = inferRoleFromMetadata(user);
     const { data } = await supabase
-      .from("profiles")
+      .from(TABLES.PROFILES)
       .insert(
         asSupabaseInsert<"profiles">({
           id: crypto.randomUUID(),
@@ -199,7 +184,7 @@ export async function requireAppSession() {
   const session = await getCurrentAppSession();
 
   if (!session) {
-    redirect("/sign-in");
+    redirect(ROUTES.SIGN_IN);
   }
 
   return session;
@@ -209,7 +194,23 @@ export async function requireRole(role: AppRole) {
   const session = await requireAppSession();
 
   if (session.profile.role !== role) {
-    redirect(role === "admin" ? "/aluno/materiais" : "/admin/alunos");
+    // Redirect to the appropriate home for the user's actual role
+    const home =
+      session.profile.role === ROLES.ALUNO
+        ? ROUTES.ALUNO.MATERIAIS
+        : ROUTES.ADMIN.ALUNOS;
+    redirect(home);
+  }
+
+  return session;
+}
+
+/** Teachers and admins both have access to the admin panel */
+export async function requireStaff() {
+  const session = await requireAppSession();
+
+  if (session.profile.role === ROLES.ALUNO) {
+    redirect(ROUTES.ALUNO.MATERIAIS);
   }
 
   return session;

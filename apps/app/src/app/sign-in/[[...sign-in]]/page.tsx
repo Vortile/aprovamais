@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SignIn } from "@clerk/nextjs";
 import { hasAppEnv } from "@/lib/supabase/env";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Entrar | Plataforma do Professor",
@@ -9,16 +10,16 @@ export const metadata: Metadata = {
 
 export default function SignInPage() {
   if (!hasAppEnv()) {
-    redirect("/setup");
+    redirect(ROUTES.SETUP);
   }
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-muted p-4">
       <SignIn
-        path="/sign-in"
+        path={ROUTES.SIGN_IN}
         routing="path"
         withSignUp={false}
-        forceRedirectUrl="/dashboard"
+        forceRedirectUrl={ROUTES.DASHBOARD}
       />
     </main>
   );

@@ -5,6 +5,9 @@ import { z } from "zod";
 import { getCurrentAppSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { asSupabaseInsert } from "@/lib/supabase/typed";
+import { TABLES } from "@repo/db";
+import { ROUTES } from "@/lib/routes";
+import { ROLES } from "@/lib/supabase/env";
 
 const createMaterialSchema = z.object({
   title: z.string().trim().min(1, "Informe o título"),
@@ -26,15 +29,19 @@ export async function createMaterial(input: unknown) {
 
   const session = await getCurrentAppSession();
 
-  if (!session || session.profile.role !== "admin") {
+  if (
+    !session ||
+    (session.profile.role !== ROLES.ADMIN &&
+      session.profile.role !== ROLES.PROFESSOR)
+  ) {
     return {
       ok: false,
-      error: "Apenas administradores podem criar materiais.",
+      error: "Apenas professores e administradores podem criar materiais.",
     } as const;
   }
 
   const { error } = await createAdminClient()
-    .from("materiais")
+    .from(TABLES.MATERIAIS)
     .insert(
       asSupabaseInsert<"materiais">({
         title: values.data.title,
@@ -49,8 +56,8 @@ export async function createMaterial(input: unknown) {
     return { ok: false, error: "Não foi possível criar o material." } as const;
   }
 
-  revalidatePath("/admin/materiais");
-  revalidatePath("/aluno/materiais");
+  revalidatePath(ROUTES.ADMIN.MATERIAIS);
+  revalidatePath(ROUTES.ALUNO.MATERIAIS);
 
   return { ok: true, message: "Material criado." } as const;
 }

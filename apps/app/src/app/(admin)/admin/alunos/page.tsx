@@ -1,27 +1,41 @@
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-export const dynamic = "force-dynamic";
+import { ROLES } from "@/lib/supabase/env";
+import { TABLES } from "@repo/db";
 import { AlunosClient } from "./alunos-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Alunos | Admin" };
+
+const PLATFORM_STUDENT_LIMIT = 100;
 
 export default async function AlunosPage() {
   const supabase = createAdminClient();
 
-  const [{ data: alunos }, { data: planos }] = await Promise.all([
-    supabase
-      .from("alunos")
-      .select(
-        "*, profiles(full_name, avatar_url), planos(name, monthly_amount, active)",
-      )
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("planos")
-      .select("*")
-      .order("active", { ascending: false })
-      .order("monthly_amount", { ascending: true }),
-  ]);
+  const [{ data: alunos }, { data: planos }, { count: studentCount }] =
+    await Promise.all([
+      supabase
+        .from(TABLES.ALUNOS)
+        .select(
+          "*, profiles(full_name, avatar_url), planos(name, monthly_amount, active)",
+        )
+        .order("created_at", { ascending: false }),
+      supabase
+        .from(TABLES.PLANOS)
+        .select("*")
+        .order("active", { ascending: false })
+        .order("monthly_amount", { ascending: true }),
+      supabase
+        .from(TABLES.PROFILES)
+        .select("id", { count: "exact", head: true })
+        .eq("role", ROLES.ALUNO)
+        .not("clerk_user_id", "is", null),
+    ]);
+
+  const count = studentCount ?? 0;
+  const pct = Math.min(Math.round((count / PLATFORM_STUDENT_LIMIT) * 100), 100);
+  const nearLimit = count >= 90;
 
   return (
     <div className="space-y-6">
@@ -31,6 +45,32 @@ export default async function AlunosPage() {
           Gerencie os alunos cadastrados na plataforma.
         </p>
       </div>
+
+      <div className="rounded-lg border bg-card p-4 space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Alunos cadastrados</span>
+          <span
+            className={
+              nearLimit ? "font-semibold text-destructive" : "font-medium"
+            }
+          >
+            {count} / {PLATFORM_STUDENT_LIMIT}
+          </span>
+        </div>
+        <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${nearLimit ? "bg-destructive" : "bg-primary"}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        {nearLimit && (
+          <p className="text-xs text-destructive">
+            Limite de alunos quase atingido. Para aumentar o limite, entre em
+            contato com Luciano.
+          </p>
+        )}
+      </div>
+
       <AlunosClient alunos={alunos ?? []} planos={planos ?? []} />
     </div>
   );

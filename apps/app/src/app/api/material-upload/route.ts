@@ -2,11 +2,16 @@ import { NextResponse } from "next/server";
 import { getCurrentAppSession } from "@/lib/auth/session";
 import { MATERIALS_BUCKET, sanitizeStorageFileName } from "@/lib/materials";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ROLES } from "@/lib/supabase/env";
 
 export async function POST(request: Request) {
   const session = await getCurrentAppSession();
 
-  if (!session || session.profile.role !== "admin") {
+  if (
+    !session ||
+    (session.profile.role !== ROLES.ADMIN &&
+      session.profile.role !== ROLES.PROFESSOR)
+  ) {
     return NextResponse.json(
       { ok: false, error: "Apenas administradores podem enviar materiais." },
       { status: 403 },

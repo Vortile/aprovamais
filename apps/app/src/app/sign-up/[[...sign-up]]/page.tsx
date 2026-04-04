@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SignUp } from "@clerk/nextjs";
 import { hasAppEnv } from "@/lib/supabase/env";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Convite | Plataforma do Professor",
@@ -19,7 +20,7 @@ export default async function SignUpPage({
   searchParams: SearchParams;
 }) {
   if (!hasAppEnv()) {
-    redirect("/setup");
+    redirect(ROUTES.SETUP);
   }
 
   const params = await searchParams;
@@ -28,16 +29,16 @@ export default async function SignUpPage({
     getSearchValue(params.__clerk_invitation_token);
 
   if (!ticket) {
-    redirect("/sign-in");
+    redirect(ROUTES.SIGN_IN);
   }
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-muted p-4">
       <SignUp
-        path="/sign-up"
+        path={ROUTES.SIGN_UP}
         routing="path"
-        signInUrl="/sign-in"
-        forceRedirectUrl="/dashboard"
+        signInUrl={ROUTES.SIGN_IN}
+        forceRedirectUrl={ROUTES.DASHBOARD}
       />
     </main>
   );

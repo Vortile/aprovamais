@@ -18,7 +18,7 @@ export interface Database {
           clerk_user_id: string | null;
           email: string | null;
           full_name: string | null;
-          role: "admin" | "aluno";
+          role: "admin" | "professor" | "aluno";
           avatar_url: string | null;
           created_at: string;
         };
@@ -27,7 +27,7 @@ export interface Database {
           clerk_user_id?: string | null;
           email?: string | null;
           full_name?: string | null;
-          role?: "admin" | "aluno";
+          role?: "admin" | "professor" | "aluno";
           avatar_url?: string | null;
           created_at?: string;
         };
@@ -35,7 +35,7 @@ export interface Database {
           clerk_user_id?: string | null;
           email?: string | null;
           full_name?: string | null;
-          role?: "admin" | "aluno";
+          role?: "admin" | "professor" | "aluno";
           avatar_url?: string | null;
         };
         Relationships: [];
@@ -43,6 +43,7 @@ export interface Database {
       alunos: {
         Row: {
           id: string;
+          professor_id: string | null;
           profile_id: string | null;
           plan_id: string | null;
           contact_email: string | null;
@@ -53,6 +54,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          professor_id?: string | null;
           profile_id?: string | null;
           plan_id?: string | null;
           contact_email?: string | null;
@@ -62,6 +64,7 @@ export interface Database {
           created_at?: string;
         };
         Update: {
+          professor_id?: string | null;
           profile_id?: string | null;
           plan_id?: string | null;
           contact_email?: string | null;
@@ -69,7 +72,6 @@ export interface Database {
           subject_focus?: string[] | null;
           notes?: string | null;
         };
-        Relationships: [];
       };
       planos: {
         Row: {
@@ -79,6 +81,10 @@ export interface Database {
           billing_day: number | null;
           description: string | null;
           active: boolean;
+          badge: string | null;
+          features: string[];
+          is_featured: boolean;
+          sort_order: number;
           created_at: string;
         };
         Insert: {
@@ -88,6 +94,10 @@ export interface Database {
           billing_day?: number | null;
           description?: string | null;
           active?: boolean;
+          badge?: string | null;
+          features?: string[];
+          is_featured?: boolean;
+          sort_order?: number;
           created_at?: string;
         };
         Update: {
@@ -96,6 +106,10 @@ export interface Database {
           billing_day?: number | null;
           description?: string | null;
           active?: boolean;
+          badge?: string | null;
+          features?: string[];
+          is_featured?: boolean;
+          sort_order?: number;
         };
         Relationships: [];
       };

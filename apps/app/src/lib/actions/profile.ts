@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { asSupabaseUpdate } from "@/lib/supabase/typed";
+import { TABLES } from "@repo/db";
+import { ROUTES } from "@/lib/routes";
+import { ACTION_ERRORS } from "@/lib/errors";
 
 const updateProfileSchema = z.object({
   profileId: z.string().uuid(),
@@ -35,13 +38,13 @@ export async function updateOwnProfile(input: unknown) {
   if (!userId) {
     return {
       ok: false,
-      error: "Sua sessão expirou. Entre novamente.",
+      error: ACTION_ERRORS.SESSION_EXPIRED,
     } as const;
   }
 
   const supabase = createAdminClient();
   const { error } = await supabase
-    .from("profiles")
+    .from(TABLES.PROFILES)
     .update(
       asSupabaseUpdate<"profiles">({
         full_name: values.data.fullName,
@@ -59,8 +62,8 @@ export async function updateOwnProfile(input: unknown) {
     ...splitFullName(values.data.fullName),
   });
 
-  revalidatePath("/admin/configuracoes");
-  revalidatePath("/dashboard");
+  revalidatePath(ROUTES.ADMIN.CONFIGURACOES);
+  revalidatePath(ROUTES.DASHBOARD);
 
   return { ok: true, message: "Perfil atualizado." } as const;
 }

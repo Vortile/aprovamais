@@ -23,10 +23,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ROUTES } from "@/lib/routes";
 
 const navItems = [
-  { href: "/aluno/materiais", label: "Materiais", icon: BookOpen },
-  { href: "/aluno/tarefas", label: "Tarefas", icon: ClipboardList },
+  { href: ROUTES.ALUNO.MATERIAIS, label: "Materiais", icon: BookOpen },
+  { href: ROUTES.ALUNO.TAREFAS, label: "Tarefas", icon: ClipboardList },
 ];
 
 interface StudentSidebarProps {

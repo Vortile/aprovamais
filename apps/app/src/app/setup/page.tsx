@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { hasAppEnv } from "@/lib/supabase/env";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Configuração | Plataforma do Professor",
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function SetupPage() {
   if (hasAppEnv()) {
-    redirect("/dashboard");
+    redirect(ROUTES.DASHBOARD);
   }
 
   return (

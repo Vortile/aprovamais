@@ -26,6 +26,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { deleteAluno } from "@/lib/actions/alunos";
 import { AlunoForm } from "./aluno-form";
 import type { Database } from "@repo/db";
@@ -57,6 +67,7 @@ export function AlunosClient({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AlunoRow | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AlunoRow | null>(null);
 
   function handleAdd() {
     setEditing(null);
@@ -68,22 +79,14 @@ export function AlunosClient({
     setOpen(true);
   }
 
-  async function handleDelete(aluno: AlunoRow) {
-    const confirmed = window.confirm(
-      aluno.profile_id
-        ? "Excluir este aluno também apagará a conta de acesso vinculada. Esta ação não pode ser desfeita. Deseja continuar?"
-        : "Deseja excluir este aluno?",
-    );
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
 
-    if (!confirmed) {
-      return;
-    }
-
-    setDeletingId(aluno.id);
-
-    const result = await deleteAluno(aluno.id);
+    const result = await deleteAluno(deleteTarget.id);
 
     setDeletingId(null);
+    setDeleteTarget(null);
 
     if (!result.ok) {
       toast.error(result.error);
@@ -195,7 +198,7 @@ export function AlunosClient({
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
                           disabled={deletingId === aluno.id}
-                          onClick={() => void handleDelete(aluno)}
+                          onClick={() => setDeleteTarget(aluno)}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           {deletingId === aluno.id ? "Excluindo..." : "Excluir"}
@@ -222,6 +225,32 @@ export function AlunosClient({
           />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir aluno?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.profile_id
+                ? "Excluir este aluno também apagará a conta de acesso vinculada. Esta ação não pode ser desfeita."
+                : "Deseja excluir este aluno? Esta ação não pode ser desfeita."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleDelete()}
+              disabled={!!deletingId}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingId ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

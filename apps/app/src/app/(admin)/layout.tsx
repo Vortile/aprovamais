@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import { requireRole } from "@/lib/auth/session";
+import { requireStaff } from "@/lib/auth/session";
 import { hasAppEnv } from "@/lib/supabase/env";
+import { ROUTES } from "@/lib/routes";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import {
   SidebarInset,
@@ -15,10 +16,10 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   if (!hasAppEnv()) {
-    redirect("/setup");
+    redirect(ROUTES.SETUP);
   }
 
-  const session = await requireRole("admin");
+  const session = await requireStaff();
 
   return (
     <SidebarProvider>

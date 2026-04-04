@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
+import { teacher, whatsappUrl, instagramUrl } from "@/lib/teacher";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -87,7 +88,7 @@ const jsonLd = {
   description:
     "Aulas particulares presenciais de Física, Matemática e Inglês em Manaus, AM. Atendimento a domicílio para Ensino Fundamental e Médio.",
   url: siteUrl,
-  telephone: "+5592981581955",
+  telephone: `+${teacher.whatsappNumber}`,
   email: "",
   founder: {
     "@type": "Person",
@@ -113,10 +114,7 @@ const jsonLd = {
   ],
   priceRange: "R$650 – R$1.300/mês",
   openingHours: "Mo-Sa 07:00-21:00",
-  sameAs: [
-    "https://instagram.com/aprovamais_educ",
-    `https://wa.me/5592981581955`,
-  ],
+  sameAs: [instagramUrl, whatsappUrl],
 };
 
 export default function RootLayout({

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getMaterialDownloadUrl } from "@/lib/materials";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MateriaisClient } from "./materiais-client";
+import type { TableRow } from "@/lib/supabase/typed";
+import { TABLES } from "@repo/db";
 
 export const dynamic = "force-dynamic";
 
@@ -11,12 +13,12 @@ export default async function MateriaisPage() {
   const supabase = createAdminClient();
 
   const { data: materiais } = await supabase
-    .from("materiais")
+    .from(TABLES.MATERIAIS)
     .select("*")
     .order("created_at", { ascending: false });
 
   const materiaisWithUrls = await Promise.all(
-    (materiais ?? []).map(async (material) => ({
+    ((materiais ?? []) as TableRow<"materiais">[]).map(async (material) => ({
       ...material,
       download_url: await getMaterialDownloadUrl(material.file_url),
     })),

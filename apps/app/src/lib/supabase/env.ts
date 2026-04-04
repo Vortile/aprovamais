@@ -9,13 +9,15 @@ export function getSupabasePublishableKey() {
 
 export function hasSupabaseDatabaseEnv() {
   return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
   );
 }
 
 export function hasClerkEnv() {
   return Boolean(
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+    process.env.CLERK_SECRET_KEY,
   );
 }
 
@@ -31,11 +33,38 @@ export function getAppUrl() {
   return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
-export function getClerkRole(value: unknown): "admin" | "aluno" | null {
-  return value === "admin" || value === "aluno" ? value : null;
+export type AppRole = "admin" | "professor" | "aluno";
+
+export const ROLES = {
+  ADMIN: "admin" as AppRole,
+  PROFESSOR: "professor" as AppRole,
+  ALUNO: "aluno" as AppRole,
+} as const;
+
+/**
+ * Derive an app role from Clerk metadata.
+ * privateMetadata is server-only and authoritative.
+ * publicMetadata is a fallback used for not-yet-activated invitation hints.
+ */
+export function getRoleFromMetadata(
+  privateMetadata: unknown,
+  publicMetadata?: unknown,
+): AppRole {
+  const check = (v: unknown): AppRole | null => {
+    if (v === "admin" || v === "professor" || v === "aluno") return v;
+    return null;
+  };
+  if (privateMetadata && typeof privateMetadata === "object") {
+    const r = check((privateMetadata as Record<string, unknown>).role);
+    if (r) return r;
+  }
+  if (publicMetadata && typeof publicMetadata === "object") {
+    const r = check((publicMetadata as Record<string, unknown>).role);
+    if (r) return r;
+  }
+  return "aluno";
 }
 
 export function normalizeEmail(email: string | null | undefined) {
   return email?.trim().toLowerCase() ?? null;
 }
-

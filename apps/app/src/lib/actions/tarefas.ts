@@ -2,10 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { Database } from "@repo/db";
+import { TABLES, type Database } from "@repo/db";
 import { getCurrentAppSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { asSupabaseInsert, asSupabaseUpdate } from "@/lib/supabase/typed";
+import { ROUTES } from "@/lib/routes";
+import { ROLES } from "@/lib/supabase/env";
+import { ACTION_ERRORS } from "@/lib/errors";
 
 const uuidSchema = z.string().uuid();
 
@@ -43,7 +46,7 @@ async function requireSession() {
   const session = await getCurrentAppSession();
 
   if (!session) {
-    return { error: "Sua sessão expirou. Entre novamente." } as const;
+    return { error: ACTION_ERRORS.SESSION_EXPIRED } as const;
   }
 
   return { session } as const;
@@ -56,9 +59,9 @@ async function requireAdminSession() {
     return result;
   }
 
-  if (result.session.profile.role !== "admin") {
+  if (result.session.profile.role === ROLES.ALUNO) {
     return {
-      error: "Apenas administradores podem gerenciar tarefas.",
+      error: "Apenas professores e administradores podem gerenciar tarefas.",
     } as const;
   }
 
@@ -67,7 +70,7 @@ async function requireAdminSession() {
 
 async function requireAlunoRecord(session: NonNullable<AppSession>) {
   const { data } = await createAdminClient()
-    .from("alunos")
+    .from(TABLES.ALUNOS)
     .select("id")
     .eq("profile_id", session.profile.id)
     .limit(1);
@@ -83,7 +86,7 @@ async function requireAlunoRecord(session: NonNullable<AppSession>) {
 
 async function findEntregaForAluno(entregaId: string, profileId: string) {
   const { data } = await createAdminClient()
-    .from("tarefa_alunos")
+    .from(TABLES.TAREFA_ALUNOS)
     .select("id, aluno_id, status, alunos(profile_id)")
     .eq("id", entregaId)
     .single();
@@ -102,8 +105,8 @@ async function findEntregaForAluno(entregaId: string, profileId: string) {
 }
 
 function revalidateTarefas() {
-  revalidatePath("/admin/tarefas");
-  revalidatePath("/aluno/tarefas");
+  revalidatePath(ROUTES.ADMIN.TAREFAS);
+  revalidatePath(ROUTES.ALUNO.TAREFAS);
 }
 
 export async function saveTarefa(input: unknown): Promise<ActionResult> {
@@ -123,8 +126,8 @@ export async function saveTarefa(input: unknown): Promise<ActionResult> {
   }
 
   const supabase = createAdminClient();
-  const { data: tarefa, error: tarefaError } = await supabase
-    .from("tarefas")
+  const { data: tarefaData, error: tarefaError } = await supabase
+    .from(TABLES.TAREFAS)
     .insert(
       asSupabaseInsert<"tarefas">({
         title: values.data.title,
@@ -136,22 +139,25 @@ export async function saveTarefa(input: unknown): Promise<ActionResult> {
     )
     .select("id")
     .single();
+  const tarefa = tarefaData as { id: string } | null;
 
   if (tarefaError || !tarefa) {
     return { ok: false, error: "Não foi possível criar a tarefa." };
   }
 
-  const { error: entregaError } = await supabase.from("tarefa_alunos").insert(
-    values.data.alunoIds.map((alunoId) =>
-      asSupabaseInsert<"tarefa_alunos">({
-        tarefa_id: tarefa.id,
-        aluno_id: alunoId,
-      }),
-    ),
-  );
+  const { error: entregaError } = await supabase
+    .from(TABLES.TAREFA_ALUNOS)
+    .insert(
+      values.data.alunoIds.map((alunoId) =>
+        asSupabaseInsert<"tarefa_alunos">({
+          tarefa_id: tarefa.id,
+          aluno_id: alunoId,
+        }),
+      ),
+    );
 
   if (entregaError) {
-    await supabase.from("tarefas").delete().eq("id", tarefa.id);
+    await supabase.from(TABLES.TAREFAS).delete().eq("id", tarefa.id);
     return {
       ok: false,
       error: "A tarefa foi criada, mas não pôde ser atribuída aos alunos.",
@@ -199,7 +205,7 @@ export async function markTarefaInProgress(
   }
 
   const { error } = await createAdminClient()
-    .from("tarefa_alunos")
+    .from(TABLES.TAREFA_ALUNOS)
     .update(
       asSupabaseUpdate<"tarefa_alunos">({
         status: "em_andamento",
@@ -260,7 +266,7 @@ export async function submitTarefa(input: unknown): Promise<ActionResult> {
 
   const now = new Date().toISOString();
   const { error } = await createAdminClient()
-    .from("tarefa_alunos")
+    .from(TABLES.TAREFA_ALUNOS)
     .update(
       asSupabaseUpdate<"tarefa_alunos">({
         status: "entregue",
@@ -299,7 +305,7 @@ export async function reviewTarefa(input: unknown): Promise<ActionResult> {
 
   const now = new Date().toISOString();
   const { error } = await createAdminClient()
-    .from("tarefa_alunos")
+    .from(TABLES.TAREFA_ALUNOS)
     .update(
       asSupabaseUpdate<"tarefa_alunos">({
         status: "revisado",
@@ -336,7 +342,7 @@ export async function deleteTarefa(input: unknown): Promise<ActionResult> {
   }
 
   const { error } = await createAdminClient()
-    .from("tarefas")
+    .from(TABLES.TAREFAS)
     .delete()
     .eq("id", tarefaId.data);
 

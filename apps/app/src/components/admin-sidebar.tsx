@@ -10,6 +10,7 @@ import {
   DollarSign,
   ExternalLink,
   GraduationCap,
+  LayoutList,
   LogOut,
   Settings,
   Users,
@@ -33,21 +34,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ROUTES } from "@/lib/routes";
 
 const navItems = [
   {
     label: "Plataforma",
     items: [
-      { href: "/admin/alunos", label: "Alunos", icon: Users },
-      { href: "/admin/materiais", label: "Materiais", icon: BookOpen },
-      { href: "/admin/tarefas", label: "Tarefas", icon: ClipboardList },
-      { href: "/admin/financeiro", label: "Financeiro", icon: DollarSign },
+      { href: ROUTES.ADMIN.ALUNOS, label: "Alunos", icon: Users },
+      { href: ROUTES.ADMIN.MATERIAIS, label: "Materiais", icon: BookOpen },
+      { href: ROUTES.ADMIN.TAREFAS, label: "Tarefas", icon: ClipboardList },
+      { href: ROUTES.ADMIN.PLANOS, label: "Planos", icon: LayoutList },
+      { href: ROUTES.ADMIN.FINANCEIRO, label: "Financeiro", icon: DollarSign },
     ],
   },
   {
     label: "Conta",
     items: [
-      { href: "/admin/configuracoes", label: "Configurações", icon: Settings },
+      {
+        href: ROUTES.ADMIN.CONFIGURACOES,
+        label: "Configurações",
+        icon: Settings,
+      },
     ],
   },
 ];
