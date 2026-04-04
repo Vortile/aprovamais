@@ -11,14 +11,21 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { createMaterial } from "@/lib/actions/materiais";
+import { createMaterial, updateMaterial } from "@/lib/actions/materiais";
+
+type EditingMaterial = {
+  id: string;
+  title: string;
+  description: string | null;
+  subject: string | null;
+  grade_level: string | null;
+};
 
 const schema = z.object({
   title: z.string().min(1, "Informe o título"),
@@ -29,8 +36,15 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function MaterialForm({ onSuccess }: { onSuccess: () => void }) {
+export function MaterialForm({
+  onSuccess,
+  material,
+}: {
+  onSuccess: () => void;
+  material?: EditingMaterial | null;
+}) {
   const router = useRouter();
+  const isEditing = Boolean(material);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -39,10 +53,10 @@ export function MaterialForm({ onSuccess }: { onSuccess: () => void }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      title: "",
-      description: "",
-      subject: "",
-      grade_level: "",
+      title: material?.title ?? "",
+      description: material?.description ?? "",
+      subject: material?.subject ?? "",
+      grade_level: material?.grade_level ?? "",
     },
   });
 
@@ -73,6 +87,27 @@ export function MaterialForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   async function onSubmit(values: FormValues) {
+    if (isEditing && material) {
+      const result = await updateMaterial({
+        materialId: material.id,
+        title: values.title,
+        description: values.description,
+        subject: values.subject,
+        gradeLevel: values.grade_level,
+      });
+
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(result.message);
+      router.refresh();
+      onSuccess();
+      return;
+    }
+
+    // Create mode — file is required
     if (!selectedFile) {
       toast.error("Envie um arquivo para o material.");
       return;
@@ -177,65 +212,69 @@ export function MaterialForm({ onSuccess }: { onSuccess: () => void }) {
             </FormItem>
           )}
         />
-        <FormItem>
-          <FormLabel>Arquivo *</FormLabel>
-          <FormControl>
-            <div
-              role="button"
-              tabIndex={0}
-              className={`rounded-lg border border-dashed p-6 text-center transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"}`}
-              onClick={() => fileInputRef.current?.click()}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
+
+        {!isEditing && (
+          <FormItem>
+            <FormLabel>Arquivo *</FormLabel>
+            <FormControl>
+              <div
+                role="button"
+                tabIndex={0}
+                className={`rounded-lg border border-dashed p-6 text-center transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"}`}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+                onDragOver={(event) => {
                   event.preventDefault();
-                  fileInputRef.current?.click();
-                }
-              }}
-              onDragOver={(event) => {
-                event.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={(event) => {
-                event.preventDefault();
-                setIsDragging(false);
-                handleFileSelection(event.dataTransfer.files[0] ?? null);
-              }}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={(event) =>
-                  handleFileSelection(event.target.files?.[0] ?? null)
-                }
-              />
-              <div className="flex flex-col items-center gap-3">
-                <div className="rounded-full bg-muted p-3">
-                  <FileUp className="h-5 w-5 text-muted-foreground" />
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setIsDragging(false);
+                  handleFileSelection(event.dataTransfer.files[0] ?? null);
+                }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(event) =>
+                    handleFileSelection(event.target.files?.[0] ?? null)
+                  }
+                />
+                <div className="flex flex-col items-center gap-3">
+                  <div className="rounded-full bg-muted p-3">
+                    <FileUp className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">
+                      Arraste o arquivo aqui ou clique para selecionar
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      O material será enviado para o bucket aprova+ no Supabase
+                      Storage.
+                    </p>
+                  </div>
+                  {selectedFile ? (
+                    <p className="text-sm text-foreground">
+                      {selectedFile.name} ·{" "}
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  ) : null}
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">
-                    Arraste o arquivo aqui ou clique para selecionar
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    O material será enviado para o bucket aprova+ no Supabase
-                    Storage.
-                  </p>
-                </div>
-                {selectedFile ? (
-                  <p className="text-sm text-foreground">
-                    {selectedFile.name} ·{" "}
-                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                ) : null}
               </div>
-            </div>
-          </FormControl>
-          {!selectedFile ? (
-            <FormMessage>Envie um arquivo para continuar.</FormMessage>
-          ) : null}
-        </FormItem>
+            </FormControl>
+            {!selectedFile ? (
+              <FormMessage>Envie um arquivo para continuar.</FormMessage>
+            ) : null}
+          </FormItem>
+        )}
+
         <div className="flex justify-end pt-2">
           <Button
             type="submit"
@@ -246,6 +285,8 @@ export function MaterialForm({ onSuccess }: { onSuccess: () => void }) {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Salvando...
               </>
+            ) : isEditing ? (
+              "Salvar alterações"
             ) : (
               "Salvar"
             )}

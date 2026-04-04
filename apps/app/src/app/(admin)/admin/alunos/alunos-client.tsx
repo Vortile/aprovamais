@@ -44,7 +44,7 @@ type PlanoRow = Database["public"]["Tables"]["planos"]["Row"];
 type AlunoRow = Database["public"]["Tables"]["alunos"]["Row"] & {
   profiles: Pick<
     Database["public"]["Tables"]["profiles"]["Row"],
-    "full_name" | "avatar_url"
+    "full_name" | "avatar_url" | "clerk_user_id"
   > | null;
   planos?: Pick<PlanoRow, "name" | "monthly_amount" | "active"> | null;
 };
@@ -136,7 +136,7 @@ export function AlunosClient({
               alunos.map((aluno) => (
                 <TableRow key={aluno.id}>
                   <TableCell className="font-medium">
-                    {aluno.profiles?.full_name ?? "—"}
+                    {aluno.profiles?.full_name ?? aluno.contact_email ?? "—"}
                   </TableCell>
                   <TableCell>
                     {aluno.planos ? (
@@ -157,11 +157,16 @@ export function AlunosClient({
                       <div className="text-sm">
                         {aluno.contact_email ?? "Sem email cadastrado"}
                       </div>
-                      <Badge
-                        variant={aluno.profile_id ? "default" : "secondary"}
-                      >
-                        {aluno.profile_id ? "Conta vinculada" : "Sem conta"}
-                      </Badge>
+                      {aluno.profiles?.clerk_user_id ? (
+                        <Badge variant="default">Ativo</Badge>
+                      ) : aluno.profile_id ? (
+                        <Badge variant="secondary" className="gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
+                          Convite pendente
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Sem conta</Badge>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>{aluno.grade ?? "—"}</TableCell>
