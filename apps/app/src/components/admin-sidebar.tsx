@@ -5,8 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
+  CalendarDays,
   ClipboardList,
   DollarSign,
+  ExternalLink,
   GraduationCap,
   LogOut,
   Settings,
@@ -97,6 +99,26 @@ export function AdminSidebar({ userName, userEmail }: AdminSidebarProps) {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+        <SidebarGroup>
+          <SidebarGroupLabel>Agenda</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a
+                    href="https://zcal.co/home"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                    <span>Gerenciar Agenda</span>
+                    <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
