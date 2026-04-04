@@ -24,6 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -99,7 +100,7 @@ export function ConfiguracoesClient({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <FormLabel>Tema</FormLabel>
+            <Label>Tema</Label>
             <Select
               value={mounted ? (theme ?? "light") : "light"}
               onValueChange={(value) => setTheme(value)}
@@ -151,7 +152,7 @@ export function ConfiguracoesClient({
                 )}
               />
               <div>
-                <FormLabel>Email</FormLabel>
+                <Label>Email</Label>
                 <Input
                   type="email"
                   value={user.email}

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, FileText, Download } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, FileText, Download, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +13,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { deleteMaterial } from "@/lib/actions/materiais";
 import { MaterialForm } from "./material-form";
 import type { Database } from "@repo/db";
 
@@ -19,7 +32,28 @@ type MaterialRow = Database["public"]["Tables"]["materiais"]["Row"] & {
 };
 
 export function MateriaisClient({ materiais }: { materiais: MaterialRow[] }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MaterialRow | null>(null);
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
+
+    const result = await deleteMaterial(deleteTarget.id);
+
+    setDeletingId(null);
+    setDeleteTarget(null);
+
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success(result.message);
+    router.refresh();
+  }
 
   return (
     <>
@@ -63,7 +97,18 @@ export function MateriaisClient({ materiais }: { materiais: MaterialRow[] }) {
                   <CardTitle className="text-base font-medium leading-snug">
                     {material.title}
                   </CardTitle>
-                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
+                  <div className="flex items-center gap-1 shrink-0">
+                    <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      disabled={deletingId === material.id}
+                      onClick={() => setDeleteTarget(material)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -115,6 +160,30 @@ export function MateriaisClient({ materiais }: { materiais: MaterialRow[] }) {
           <MaterialForm onSuccess={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => !v && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir material?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O material <strong>{deleteTarget?.title}</strong> e seu arquivo
+              serão excluídos permanentemente. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

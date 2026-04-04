@@ -232,10 +232,6 @@ export function MaterialForm({ onSuccess }: { onSuccess: () => void }) {
               </div>
             </div>
           </FormControl>
-          <FormDescription>
-            O link manual foi removido. Agora o arquivo sobe direto para o
-            Storage.
-          </FormDescription>
           {!selectedFile ? (
             <FormMessage>Envie um arquivo para continuar.</FormMessage>
           ) : null}

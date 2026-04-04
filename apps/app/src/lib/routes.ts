@@ -7,6 +7,7 @@ export const ROUTES = {
   LOGIN: "/login",
   ADMIN: {
     ALUNOS: "/admin/alunos",
+    PROFESSORES: "/admin/professores",
     MATERIAIS: "/admin/materiais",
     TAREFAS: "/admin/tarefas",
     PLANOS: "/admin/planos",

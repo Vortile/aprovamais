@@ -10,14 +10,10 @@ import { ROUTES } from "@/lib/routes";
 import { ROLES } from "@/lib/supabase/env";
 import { ACTION_ERRORS } from "@/lib/errors";
 
-async function assertStaff() {
+async function assertAdmin() {
   const session = await getCurrentAppSession();
   if (!session) return null;
-  if (
-    session.profile.role !== ROLES.ADMIN &&
-    session.profile.role !== ROLES.PROFESSOR
-  )
-    return null;
+  if (session.profile.role !== ROLES.ADMIN) return null;
   return session;
 }
 
@@ -44,7 +40,7 @@ export async function saveRegistroFinanceiro(input: unknown) {
     } as const;
   }
 
-  const session = await assertStaff();
+  const session = await assertAdmin();
   if (!session) {
     return { ok: false, error: ACTION_ERRORS.NO_PERMISSION } as const;
   }
@@ -80,7 +76,7 @@ export async function marcarComoPago(registroId: string) {
     return { ok: false, error: "ID inválido." } as const;
   }
 
-  const session = await assertStaff();
+  const session = await assertAdmin();
   if (!session) {
     return { ok: false, error: ACTION_ERRORS.NO_PERMISSION } as const;
   }
