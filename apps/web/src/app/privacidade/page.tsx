@@ -3,8 +3,11 @@ import Link from "next/link";
 import { teacher, whatsappUrl } from "@/lib/teacher";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade | Aprende+",
-  description: "Como tratamos seus dados no Aprende+.",
+  title: "Política de Privacidade",
+  description:
+    "Como o Aprende+ trata seus dados pessoais. Transparência total sobre coleta, uso e proteção de informações.",
+  alternates: { canonical: "/privacidade" },
+  robots: { index: false, follow: false },
 };
 
 export default function PrivacidadePage() {

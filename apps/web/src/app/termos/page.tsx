@@ -3,8 +3,11 @@ import Link from "next/link";
 import { teacher, whatsappUrl } from "@/lib/teacher";
 
 export const metadata: Metadata = {
-  title: "Termos de Uso | Aprende+",
-  description: "Condições para uso dos serviços do Aprende+.",
+  title: "Termos de Uso",
+  description:
+    "Condições para contratação e uso dos serviços do Aprende+ em Manaus.",
+  alternates: { canonical: "/termos" },
+  robots: { index: false, follow: false },
 };
 
 export default function TermosPage() {
