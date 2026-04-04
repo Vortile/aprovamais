@@ -4,6 +4,8 @@ import { getMaterialDownloadUrl } from "@/lib/materials";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { TarefasClient } from "./tarefas-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Tarefas | Admin" };
 
 type MaterialRow = Pick<

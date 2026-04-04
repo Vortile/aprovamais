@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { FinanceiroClient } from "./financeiro-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Financeiro | Admin" };
 
 export default async function FinanceiroPage() {

@@ -3,6 +3,8 @@ import { getMaterialDownloadUrl } from "@/lib/materials";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MateriaisClient } from "./materiais-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Materiais | Admin" };
 
 export default async function MateriaisPage() {

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
 import { AlunosClient } from "./alunos-client";
 
 export const metadata: Metadata = { title: "Alunos | Admin" };

@@ -5,7 +5,7 @@ import { teacher, whatsappUrl } from "@/lib/teacher";
 export const metadata: Metadata = {
   title: "Termos de Uso",
   description:
-    "Condições para contratação e uso dos serviços do Aprende+ em Manaus.",
+    "Condições para contratação e uso dos serviços do Aprova+ em Manaus.",
   alternates: { canonical: "/termos" },
   robots: { index: false, follow: false },
 };
@@ -20,7 +20,7 @@ export default function TermosPage() {
             href="/"
             className="text-xl font-black text-primary font-headline"
           >
-            Aprende<span className="text-tertiary">+</span>
+            Aprova<span className="text-tertiary">+</span>
           </Link>
         </div>
       </div>
@@ -34,7 +34,7 @@ export default function TermosPage() {
             Termos de Uso
           </h1>
           <p className="text-lg text-on-surface-variant leading-relaxed">
-            Ao contratar os serviços do Aprende+, você concorda com as condições
+            Ao contratar os serviços do Aprova+, você concorda com as condições
             abaixo. São simples, diretas e pensadas para proteger tanto o aluno
             quanto eu, {teacher.firstName}.
           </p>

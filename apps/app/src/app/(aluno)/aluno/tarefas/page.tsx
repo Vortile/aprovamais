@@ -5,6 +5,8 @@ import { getMaterialDownloadUrl } from "@/lib/materials";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AlunoTarefasClient } from "./tarefas-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Tarefas | Aluno" };
 
 type MaterialRow = Pick<

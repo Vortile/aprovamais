@@ -5,7 +5,7 @@ import { teacher, whatsappUrl } from "@/lib/teacher";
 export const metadata: Metadata = {
   title: "Política de Privacidade",
   description:
-    "Como o Aprende+ trata seus dados pessoais. Transparência total sobre coleta, uso e proteção de informações.",
+    "Como o Aprova+ trata seus dados pessoais. Transparência total sobre coleta, uso e proteção de informações.",
   alternates: { canonical: "/privacidade" },
   robots: { index: false, follow: false },
 };
@@ -20,7 +20,7 @@ export default function PrivacidadePage() {
             href="/"
             className="text-xl font-black text-primary font-headline"
           >
-            Aprende<span className="text-tertiary">+</span>
+            Aprova<span className="text-tertiary">+</span>
           </Link>
         </div>
       </div>
@@ -41,7 +41,7 @@ export default function PrivacidadePage() {
 
         <Section title="1. Quem sou">
           <p>
-            Aprende+ é um serviço de aulas particulares presenciais em Manaus,
+            Aprova+ é um serviço de aulas particulares presenciais em Manaus,
             AM, operado por mim, <strong>{teacher.fullName}</strong>. Para
             dúvidas ou solicitações relacionadas a dados, entre em contato pelo
             WhatsApp indicado no site.

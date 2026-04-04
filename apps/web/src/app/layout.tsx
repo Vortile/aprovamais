@@ -9,13 +9,13 @@ const manrope = Manrope({
   display: "swap",
 });
 
-const siteUrl = "https://aprendemais.com.br";
+const siteUrl = "https://aprovamais.com.br";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Aprende+ | Aulas Particulares em Manaus — Física e Matemática",
-    template: "%s | Aprende+",
+    default: "Aprova+ | Aulas Particulares em Manaus — Física e Matemática",
+    template: "%s | Aprova+",
   },
   description:
     "Aulas particulares presenciais em Manaus de Física, Matemática e Inglês para o Ensino Fundamental e Médio. Professor formado em Física, atendimento a domicílio. Primeira aula grátis.",
@@ -31,12 +31,12 @@ export const metadata: Metadata = {
     "reforço Ensino Médio Manaus",
     "reforço Ensino Fundamental Manaus",
     "vestibular Manaus",
-    "Aprende+",
+    "Aprova+",
     "aprovamais",
   ],
   authors: [{ name: "Deuticilam Gomes Maia Júnior" }],
   creator: "Deuticilam Gomes Maia Júnior",
-  publisher: "Aprende+",
+  publisher: "Aprova+",
   alternates: {
     canonical: siteUrl,
   },
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     url: siteUrl,
-    siteName: "Aprende+",
-    title: "Aprende+ | Aulas Particulares em Manaus — Física e Matemática",
+    siteName: "Aprova+",
+    title: "Aprova+ | Aulas Particulares em Manaus — Física e Matemática",
     description:
       "Aulas particulares presenciais em Manaus de Física, Matemática e Inglês. Professor formado em Física, atendimento a domicílio. Primeira aula grátis.",
     images: [
@@ -53,13 +53,13 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Aprende+ — Aulas Particulares em Manaus",
+        alt: "Aprova+ — Aulas Particulares em Manaus",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aprende+ | Aulas Particulares em Manaus",
+    title: "Aprova+ | Aulas Particulares em Manaus",
     description:
       "Física, Matemática e Inglês a domicílio em Manaus. Primeira aula grátis.",
     images: ["/og-image.png"],
@@ -83,7 +83,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "@id": siteUrl,
-  name: "Aprende+",
+  name: "Aprova+",
   description:
     "Aulas particulares presenciais de Física, Matemática e Inglês em Manaus, AM. Atendimento a domicílio para Ensino Fundamental e Médio.",
   url: siteUrl,

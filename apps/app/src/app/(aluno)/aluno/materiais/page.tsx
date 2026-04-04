@@ -3,6 +3,8 @@ import { BookOpen, Download, FileText } from "lucide-react";
 import { getMaterialDownloadUrl } from "@/lib/materials";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { asSupabaseRows } from "@/lib/supabase/typed";
+
+export const dynamic = "force-dynamic";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

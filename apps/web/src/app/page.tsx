@@ -13,7 +13,7 @@ export default function WebHomePage() {
             className="text-2xl font-bold text-primary font-headline tracking-tight"
             href="#"
           >
-            Aprende<span className="text-tertiary font-extrabold">+</span>
+            Aprova<span className="text-tertiary font-extrabold">+</span>
           </a>
           <div className="hidden md:flex items-center gap-8">
             <a
@@ -525,7 +525,7 @@ export default function WebHomePage() {
               className="text-xl font-black text-primary font-headline"
               href="#"
             >
-              Aprende<span className="text-tertiary">+</span>
+              Aprova<span className="text-tertiary">+</span>
             </a>
             <p className="text-on-surface-variant text-sm leading-relaxed max-w-xs">
               Resultado que aparece. Sou {teacher.firstName}, professor
@@ -559,7 +559,7 @@ export default function WebHomePage() {
               <div className="flex flex-col gap-2">
                 <a
                   className="text-tertiary font-semibold hover:opacity-100 transition-all text-sm"
-                  href="https://app.aprendemais.com.br"
+                  href="https://app.aprovamais.com.br"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -571,7 +571,7 @@ export default function WebHomePage() {
         </div>
         <div className="max-w-7xl mx-auto px-8 pb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-outline-variant/10 pt-8">
           <p className="text-on-surface-variant opacity-70 text-xs">
-            © 2026 Aprende+ · Manaus, AM
+            © 2026 Aprova+ · Manaus, AM
           </p>
           <div className="flex gap-5">
             <a
