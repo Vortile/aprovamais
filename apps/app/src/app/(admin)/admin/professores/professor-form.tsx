@@ -20,6 +20,7 @@ import { saveProfessor } from "@/lib/actions/professores";
 const schema = z.object({
   fullName: z.string().trim().min(2, "Nome deve ter ao menos 2 caracteres"),
   email: z.string().trim().email("Informe um email válido"),
+  address: z.string().trim().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -29,7 +30,7 @@ export function ProfessorForm({ onSuccess }: { onSuccess: () => void }) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { fullName: "", email: "" },
+    defaultValues: { fullName: "", email: "", address: "" },
   });
 
   async function onSubmit(values: FormValues) {
@@ -73,6 +74,19 @@ export function ProfessorForm({ onSuccess }: { onSuccess: () => void }) {
                   placeholder="professor@email.com"
                   {...field}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Endereço</FormLabel>
+              <FormControl>
+                <Input placeholder="Rua, número, bairro, cidade" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

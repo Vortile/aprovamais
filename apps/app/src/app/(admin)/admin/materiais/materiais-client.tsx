@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, FileText, Download, Trash2, Pencil, User } from "lucide-react";
+import {
+  Plus,
+  FileText,
+  Download,
+  Trash2,
+  Pencil,
+  User,
+  UserPlus,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +37,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteMaterial } from "@/lib/actions/materiais";
+import {
+  deleteMaterial,
+  updateMaterialAssignments,
+} from "@/lib/actions/materiais";
 import { MaterialForm } from "./material-form";
 import type { Database } from "@repo/db";
 
@@ -38,18 +49,62 @@ type MaterialRow = Database["public"]["Tables"]["materiais"]["Row"] & {
   uploader_name: string | null;
 };
 
+type AlunoOption = { id: string; name: string };
+
 export function MateriaisClient({
   materiais,
   isAdmin,
+  alunos,
+  assignmentsByMaterial,
 }: {
   materiais: MaterialRow[];
   isAdmin: boolean;
+  alunos: AlunoOption[];
+  assignmentsByMaterial: Record<string, string[]>;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<MaterialRow | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MaterialRow | null>(null);
+  const [assigningMaterial, setAssigningMaterial] =
+    useState<MaterialRow | null>(null);
+  const [selectedAlunoIds, setSelectedAlunoIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [savingAssign, setSavingAssign] = useState(false);
+
+  function handleOpenAssign(material: MaterialRow) {
+    const current = new Set(assignmentsByMaterial[material.id] ?? []);
+    setSelectedAlunoIds(current);
+    setAssigningMaterial(material);
+  }
+
+  async function handleSaveAssignments() {
+    if (!assigningMaterial) return;
+    setSavingAssign(true);
+    const result = await updateMaterialAssignments({
+      materialId: assigningMaterial.id,
+      alunoIds: Array.from(selectedAlunoIds),
+    });
+    setSavingAssign(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success(result.message);
+    setAssigningMaterial(null);
+    router.refresh();
+  }
+
+  function toggleAluno(alunoId: string) {
+    setSelectedAlunoIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(alunoId)) next.delete(alunoId);
+      else next.add(alunoId);
+      return next;
+    });
+  }
 
   function handleAdd() {
     setEditing(null);
@@ -125,6 +180,15 @@ export function MateriaisClient({
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      title="Atribuir a alunos"
+                      onClick={() => handleOpenAssign(material)}
+                    >
+                      <UserPlus className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
                       onClick={() => handleEdit(material)}
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -161,12 +225,24 @@ export function MateriaisClient({
                 </div>
               </CardContent>
               <CardFooter className="flex items-center justify-between gap-2 pt-0">
-                {isAdmin && material.uploader_name && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
-                    <User className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{material.uploader_name}</span>
-                  </span>
-                )}
+                <div className="flex items-center gap-2 min-w-0">
+                  {isAdmin && material.uploader_name && (
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
+                      <User className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{material.uploader_name}</span>
+                    </span>
+                  )}
+                  {(() => {
+                    const count = (assignmentsByMaterial[material.id] ?? [])
+                      .length;
+                    return count > 0 ? (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <UserPlus className="h-3 w-3 shrink-0" />
+                        {count} aluno{count !== 1 ? "s" : ""}
+                      </span>
+                    ) : null;
+                  })()}
+                </div>
                 {material.download_url && (
                   <a
                     href={material.download_url}
@@ -226,6 +302,59 @@ export function MateriaisClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Assign Dialog */}
+      <Dialog
+        open={!!assigningMaterial}
+        onOpenChange={(v) => !v && setAssigningMaterial(null)}
+      >
+        <DialogContent className="max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Atribuir a alunos</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              {assigningMaterial?.title}
+            </p>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+            {alunos.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Nenhum aluno cadastrado.
+              </p>
+            ) : (
+              alunos.map((aluno) => (
+                <label
+                  key={aluno.id}
+                  className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-muted-foreground"
+                    checked={selectedAlunoIds.has(aluno.id)}
+                    onChange={() => toggleAluno(aluno.id)}
+                  />
+                  <span className="text-sm">{aluno.name}</span>
+                </label>
+              ))
+            )}
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAssigningMaterial(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              disabled={savingAssign}
+              onClick={() => void handleSaveAssignments()}
+            >
+              {savingAssign ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

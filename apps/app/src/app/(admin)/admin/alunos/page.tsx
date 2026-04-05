@@ -19,23 +19,14 @@ export default async function AlunosPage() {
 
   let alunosQuery = supabase
     .from(TABLES.ALUNOS)
-    .select(
-      "*, profiles(full_name, avatar_url, clerk_user_id), planos(name, monthly_amount, active)",
-    )
+    .select("*, profiles(full_name, avatar_url, clerk_user_id)")
     .order("created_at", { ascending: false });
 
   if (isProfessor && session) {
     alunosQuery = alunosQuery.eq("professor_id", session.profile.id);
   }
 
-  const [{ data: alunos }, { data: planos }] = await Promise.all([
-    alunosQuery,
-    supabase
-      .from(TABLES.PLANOS)
-      .select("*")
-      .order("active", { ascending: false })
-      .order("monthly_amount", { ascending: true }),
-  ]);
+  const [{ data: alunos }] = await Promise.all([alunosQuery]);
 
   let studentCount: number | null = null;
 
@@ -91,7 +82,7 @@ export default async function AlunosPage() {
         </div>
       )}
 
-      <AlunosClient alunos={alunos ?? []} planos={planos ?? []} />
+      <AlunosClient alunos={alunos ?? []} isAdmin={!isProfessor} />
     </div>
   );
 }

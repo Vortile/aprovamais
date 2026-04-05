@@ -16,17 +16,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { saveAluno } from "@/lib/actions/alunos";
 import type { Database } from "@repo/db";
 
-type PlanoRow = Database["public"]["Tables"]["planos"]["Row"];
 type AlunoRow = Database["public"]["Tables"]["alunos"]["Row"] & {
   profiles?: Pick<
     Database["public"]["Tables"]["profiles"]["Row"],
@@ -41,7 +33,8 @@ const schema = z.object({
     .trim()
     .email("Informe um email válido")
     .or(z.literal("")),
-  plan_id: z.string().uuid("Selecione um plano"),
+  monthly_amount: z.string().trim().optional(),
+  address: z.string().trim().optional(),
   grade: z.string().min(1, "Informe a série"),
   subject_focus: z.string(),
   notes: z.string(),
@@ -51,11 +44,9 @@ type FormValues = z.infer<typeof schema>;
 
 export function AlunoForm({
   aluno,
-  plans,
   onSuccess,
 }: {
   aluno: AlunoRow | null;
-  plans: PlanoRow[];
   onSuccess: () => void;
 }) {
   const router = useRouter();
@@ -65,7 +56,9 @@ export function AlunoForm({
     defaultValues: {
       full_name: aluno?.profiles?.full_name ?? "",
       contact_email: aluno?.contact_email ?? "",
-      plan_id: aluno?.plan_id ?? "",
+      monthly_amount:
+        aluno?.monthly_amount != null ? String(aluno.monthly_amount) : "",
+      address: aluno?.address ?? "",
       grade: aluno?.grade ?? "",
       subject_focus: aluno?.subject_focus?.join(", ") ?? "",
       notes: aluno?.notes ?? "",
@@ -80,7 +73,8 @@ export function AlunoForm({
       alunoId: aluno?.id,
       fullName: values.full_name,
       contactEmail: values.contact_email,
-      planId: values.plan_id,
+      monthlyAmount: values.monthly_amount,
+      address: values.address,
       grade: values.grade,
       subjectFocus: values.subject_focus,
       notes: values.notes,
@@ -144,57 +138,54 @@ export function AlunoForm({
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="plan_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Plano</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                value={field.value}
-              >
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="monthly_amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mensalidade (R$)</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um plano" />
-                  </SelectTrigger>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Ex: 350.00"
+                    {...field}
+                  />
                 </FormControl>
-                <SelectContent>
-                  {plans.length === 0 ? (
-                    <SelectItem value="__sem_plano" disabled>
-                      Crie um plano primeiro no Financeiro
-                    </SelectItem>
-                  ) : (
-                    plans.map((plan) => (
-                      <SelectItem key={plan.id} value={plan.id}>
-                        {plan.name} ·{" "}
-                        {new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        }).format(plan.monthly_amount)}
-                        {!plan.active ? " · Inativo" : ""}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Todo aluno precisa estar vinculado a um plano para entrar na
-                projeção financeira.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormDescription>
+                  Valor acordado com este aluno.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="grade"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Série / Ano</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Ex: 8º Ano, Ensino Médio 1..."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
-          name="grade"
+          name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Série / Ano</FormLabel>
+              <FormLabel>Endereço</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: 8º Ano, Ensino Médio 1..." {...field} />
+                <Input placeholder="Rua, número, bairro, cidade" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

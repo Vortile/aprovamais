@@ -37,7 +37,7 @@ type Registro = Database["public"]["Tables"]["financeiro"]["Row"] & {
 type Plano = Database["public"]["Tables"]["planos"]["Row"];
 type AlunoResumo = Pick<
   Database["public"]["Tables"]["alunos"]["Row"],
-  "id" | "plan_id"
+  "id" | "monthly_amount"
 > & {
   profiles: { full_name: string | null } | null;
 };
@@ -79,25 +79,16 @@ export function FinanceiroClient({
     toast.success(result.message);
     router.refresh();
   }
-  const planById = new Map(planos.map((plan) => [plan.id, plan]));
-  const alunosComPlano = alunos.filter((aluno) => aluno.plan_id);
-  const alunosSemPlano = alunos.filter((aluno) => !aluno.plan_id);
-  const expectedMonthly = alunosComPlano.reduce((acc, aluno) => {
-    const plan = aluno.plan_id ? planById.get(aluno.plan_id) : null;
-    return acc + (plan?.monthly_amount ?? 0);
-  }, 0);
+  const alunosComMensalidade = alunos.filter((a) => a.monthly_amount != null);
+  const alunosSemMensalidade = alunos.filter((a) => a.monthly_amount == null);
+  const expectedMonthly = alunos.reduce(
+    (acc, a) => acc + (a.monthly_amount ?? 0),
+    0,
+  );
   const pagos = registros.filter((r) => r.paid_at);
   const pendentes = registros.filter((r) => !r.paid_at);
   const totalPago = pagos.reduce((acc, r) => acc + r.amount, 0);
   const totalPendente = pendentes.reduce((acc, r) => acc + r.amount, 0);
-  const alunosPorPlano = alunos.reduce<Record<string, number>>((acc, aluno) => {
-    if (!aluno.plan_id) {
-      return acc;
-    }
-
-    acc[aluno.plan_id] = (acc[aluno.plan_id] ?? 0) + 1;
-    return acc;
-  }, {});
 
   return (
     <div className="space-y-6">
@@ -113,8 +104,8 @@ export function FinanceiroClient({
               {formatCurrency(expectedMonthly)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {alunosComPlano.length} aluno
-              {alunosComPlano.length !== 1 ? "s" : ""} com plano
+              {alunosComMensalidade.length} aluno
+              {alunosComMensalidade.length !== 1 ? "s" : ""} com mensalidade
             </p>
           </CardContent>
         </Card>
@@ -151,15 +142,15 @@ export function FinanceiroClient({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Alunos Sem Plano
+              Alunos Sem Mensalidade
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-rose-600 dark:text-rose-400">
-              {alunosSemPlano.length}
+              {alunosSemMensalidade.length}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Eles não entram na projeção até receberem um plano
+              Eles não entram na projeção até receberem uma mensalidade
             </p>
           </CardContent>
         </Card>
@@ -185,10 +176,8 @@ export function FinanceiroClient({
             <TableHeader>
               <TableRow>
                 <TableHead>Plano</TableHead>
-                <TableHead>Mensalidade</TableHead>
+                <TableHead>Mensalidade base</TableHead>
                 <TableHead>Dia</TableHead>
-                <TableHead>Alunos</TableHead>
-                <TableHead>Receita Esperada</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -204,9 +193,6 @@ export function FinanceiroClient({
                 </TableRow>
               ) : (
                 planos.map((plan) => {
-                  const alunoCount = alunosPorPlano[plan.id] ?? 0;
-                  const receitaEsperada = plan.monthly_amount * alunoCount;
-
                   return (
                     <TableRow key={plan.id}>
                       <TableCell>
@@ -225,8 +211,6 @@ export function FinanceiroClient({
                           ? `Todo dia ${plan.billing_day}`
                           : "—"}
                       </TableCell>
-                      <TableCell>{alunoCount}</TableCell>
-                      <TableCell>{formatCurrency(receitaEsperada)}</TableCell>
                       <TableCell>
                         <Badge variant={plan.active ? "default" : "secondary"}>
                           {plan.active ? "Ativo" : "Inativo"}

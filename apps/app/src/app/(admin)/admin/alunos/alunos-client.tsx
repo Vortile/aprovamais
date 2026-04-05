@@ -39,14 +39,11 @@ import {
 import { deleteAluno } from "@/lib/actions/alunos";
 import { AlunoForm } from "./aluno-form";
 import type { Database } from "@repo/db";
-
-type PlanoRow = Database["public"]["Tables"]["planos"]["Row"];
 type AlunoRow = Database["public"]["Tables"]["alunos"]["Row"] & {
   profiles: Pick<
     Database["public"]["Tables"]["profiles"]["Row"],
     "full_name" | "avatar_url" | "clerk_user_id"
   > | null;
-  planos?: Pick<PlanoRow, "name" | "monthly_amount" | "active"> | null;
 };
 
 function formatCurrency(value: number) {
@@ -58,10 +55,10 @@ function formatCurrency(value: number) {
 
 export function AlunosClient({
   alunos,
-  planos,
+  isAdmin,
 }: {
   alunos: AlunoRow[];
-  planos: PlanoRow[];
+  isAdmin: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -104,10 +101,12 @@ export function AlunosClient({
           {alunos.length} aluno{alunos.length !== 1 ? "s" : ""} cadastrado
           {alunos.length !== 1 ? "s" : ""}
         </p>
-        <Button size="sm" onClick={handleAdd}>
-          <Plus className="h-4 w-4 mr-1" />
-          Novo Aluno
-        </Button>
+        {isAdmin && (
+          <Button size="sm" onClick={handleAdd}>
+            <Plus className="h-4 w-4 mr-1" />
+            Novo Aluno
+          </Button>
+        )}
       </div>
 
       <div className="rounded-lg border bg-card overflow-hidden">
@@ -115,7 +114,7 @@ export function AlunosClient({
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Plano</TableHead>
+              <TableHead>Mensalidade</TableHead>
               <TableHead>Conta</TableHead>
               <TableHead>Série</TableHead>
               <TableHead>Disciplinas</TableHead>
@@ -139,17 +138,10 @@ export function AlunosClient({
                     {aluno.profiles?.full_name ?? aluno.contact_email ?? "—"}
                   </TableCell>
                   <TableCell>
-                    {aluno.planos ? (
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium">
-                          {aluno.planos.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {formatCurrency(aluno.planos.monthly_amount)}
-                        </div>
-                      </div>
+                    {aluno.monthly_amount != null ? (
+                      formatCurrency(aluno.monthly_amount)
                     ) : (
-                      <Badge variant="destructive">Sem plano</Badge>
+                      <span className="text-muted-foreground text-sm">—</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -188,28 +180,36 @@ export function AlunosClient({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Ações</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(aluno)}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          disabled={deletingId === aluno.id}
-                          onClick={() => setDeleteTarget(aluno)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {deletingId === aluno.id ? "Excluindo..." : "Excluir"}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {isAdmin ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Ações</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(aluno)}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            disabled={deletingId === aluno.id}
+                            onClick={() => setDeleteTarget(aluno)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {deletingId === aluno.id
+                              ? "Excluindo..."
+                              : "Excluir"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))
@@ -223,11 +223,7 @@ export function AlunosClient({
           <DialogHeader>
             <DialogTitle>{editing ? "Editar Aluno" : "Novo Aluno"}</DialogTitle>
           </DialogHeader>
-          <AlunoForm
-            aluno={editing}
-            plans={planos}
-            onSuccess={() => setOpen(false)}
-          />
+          <AlunoForm aluno={editing} onSuccess={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
 

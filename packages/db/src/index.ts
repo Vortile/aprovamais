@@ -10,4 +10,5 @@ export const TABLES = {
   FINANCEIRO: "financeiro",
   TAREFAS: "tarefas",
   TAREFA_ALUNOS: "tarefa_alunos",
+  ALUNO_MATERIAIS: "aluno_materiais",
 } as const satisfies Record<string, string>;

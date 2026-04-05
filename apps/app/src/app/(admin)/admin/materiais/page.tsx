@@ -25,7 +25,42 @@ export default async function MateriaisPage() {
     materiaisQuery = materiaisQuery.eq("uploaded_by", session.profile.id);
   }
 
-  const { data: materiais } = await materiaisQuery;
+  // Fetch alunos scoped to this staff member
+  let alunosQuery = supabase
+    .from(TABLES.ALUNOS)
+    .select("id, contact_email, profiles(full_name)")
+    .order("created_at", { ascending: false });
+
+  if (!isAdmin && session) {
+    alunosQuery = alunosQuery.eq("professor_id", session.profile.id);
+  }
+
+  const [{ data: materiais }, { data: alunos }] = await Promise.all([
+    materiaisQuery,
+    alunosQuery,
+  ]);
+
+  const materialIds = ((materiais ?? []) as TableRow<"materiais">[]).map(
+    (m) => m.id,
+  );
+
+  // Fetch existing assignments for visible materials
+  let assignmentsByMaterial: Record<string, string[]> = {};
+
+  if (materialIds.length > 0) {
+    const { data: assignments } = await supabase
+      .from(TABLES.ALUNO_MATERIAIS)
+      .select("material_id, aluno_id")
+      .in("material_id", materialIds);
+
+    for (const row of assignments ?? []) {
+      const r = row as { material_id: string; aluno_id: string };
+      if (!assignmentsByMaterial[r.material_id]) {
+        assignmentsByMaterial[r.material_id] = [];
+      }
+      assignmentsByMaterial[r.material_id].push(r.aluno_id);
+    }
+  }
 
   // Collect unique uploader profile IDs for name lookup
   const uploaderIds = [
@@ -60,6 +95,18 @@ export default async function MateriaisPage() {
     })),
   );
 
+  const alunosList = (alunos ?? []).map((a) => {
+    const row = a as {
+      id: string;
+      contact_email: string | null;
+      profiles: { full_name: string | null } | null;
+    };
+    return {
+      id: row.id,
+      name: row.profiles?.full_name ?? row.contact_email ?? row.id,
+    };
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -73,6 +120,8 @@ export default async function MateriaisPage() {
       <MateriaisClient
         materiais={materiaisWithMeta}
         isAdmin={isAdmin ?? false}
+        alunos={alunosList}
+        assignmentsByMaterial={assignmentsByMaterial}
       />
     </div>
   );

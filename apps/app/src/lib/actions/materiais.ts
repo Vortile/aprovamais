@@ -209,3 +209,79 @@ export async function deleteMaterial(
 
   return { ok: true, message: "Material excluído." };
 }
+
+const assignSchema = z.object({
+  materialId: z.string().uuid(),
+  alunoIds: z.array(z.string().uuid()),
+});
+
+export async function updateMaterialAssignments(
+  input: unknown,
+): Promise<ActionResult> {
+  const values = assignSchema.safeParse(input);
+
+  if (!values.success) {
+    return { ok: false, error: "Dados inválidos para atribuição." };
+  }
+
+  const session = await assertStaffSession();
+
+  if (!session) {
+    return { ok: false, error: ACTION_ERRORS.NO_PERMISSION };
+  }
+
+  const supabase = createAdminClient();
+  const { materialId, alunoIds } = values.data;
+  const isAdmin = session.profile.role === ROLES.ADMIN;
+
+  if (isAdmin) {
+    // Admin: replace all assignments for this material
+    await supabase
+      .from(TABLES.ALUNO_MATERIAIS)
+      .delete()
+      .eq("material_id", materialId);
+  } else {
+    // Professor: only remove assignments for their own students
+    const { data: myAlunos } = await supabase
+      .from(TABLES.ALUNOS)
+      .select("id")
+      .eq("professor_id", session.profile.id);
+
+    const myAlunoIds = (myAlunos ?? []).map((a) => (a as { id: string }).id);
+
+    if (myAlunoIds.length > 0) {
+      await supabase
+        .from(TABLES.ALUNO_MATERIAIS)
+        .delete()
+        .eq("material_id", materialId)
+        .in("aluno_id", myAlunoIds);
+    }
+
+    // Ensure professor can only assign to their own students
+    const validIds = alunoIds.filter((id) => myAlunoIds.includes(id));
+    values.data.alunoIds.splice(0, values.data.alunoIds.length, ...validIds);
+  }
+
+  if (alunoIds.length > 0) {
+    const inserts = alunoIds.map((alunoId) =>
+      asSupabaseInsert<"aluno_materiais">({
+        aluno_id: alunoId,
+        material_id: materialId,
+        assigned_by: session.profile.id,
+      }),
+    );
+
+    const { error } = await supabase
+      .from(TABLES.ALUNO_MATERIAIS)
+      .insert(inserts);
+
+    if (error) {
+      return { ok: false, error: "Não foi possível salvar as atribuições." };
+    }
+  }
+
+  revalidatePath(ROUTES.ADMIN.MATERIAIS);
+  revalidatePath(ROUTES.ALUNO.MATERIAIS);
+
+  return { ok: true, message: "Atribuições salvas." };
+}

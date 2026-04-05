@@ -20,6 +20,7 @@ export interface Database {
           full_name: string | null;
           role: "admin" | "professor" | "aluno";
           avatar_url: string | null;
+          address: string | null;
           created_at: string;
         };
         Insert: {
@@ -29,6 +30,7 @@ export interface Database {
           full_name?: string | null;
           role?: "admin" | "professor" | "aluno";
           avatar_url?: string | null;
+          address?: string | null;
           created_at?: string;
         };
         Update: {
@@ -37,6 +39,7 @@ export interface Database {
           full_name?: string | null;
           role?: "admin" | "professor" | "aluno";
           avatar_url?: string | null;
+          address?: string | null;
         };
         Relationships: [];
       };
@@ -50,6 +53,8 @@ export interface Database {
           grade: string | null;
           subject_focus: string[] | null;
           notes: string | null;
+          monthly_amount: number | null;
+          address: string | null;
           created_at: string;
         };
         Insert: {
@@ -61,6 +66,8 @@ export interface Database {
           grade?: string | null;
           subject_focus?: string[] | null;
           notes?: string | null;
+          monthly_amount?: number | null;
+          address?: string | null;
           created_at?: string;
         };
         Update: {
@@ -71,6 +78,8 @@ export interface Database {
           grade?: string | null;
           subject_focus?: string[] | null;
           notes?: string | null;
+          monthly_amount?: number | null;
+          address?: string | null;
         };
       };
       planos: {
@@ -197,6 +206,28 @@ export interface Database {
           due_date?: string | null;
           material_id?: string | null;
           created_by?: string | null;
+        };
+        Relationships: [];
+      };
+      aluno_materiais: {
+        Row: {
+          id: string;
+          aluno_id: string;
+          material_id: string;
+          assigned_by: string | null;
+          assigned_at: string;
+        };
+        Insert: {
+          id?: string;
+          aluno_id: string;
+          material_id: string;
+          assigned_by?: string | null;
+          assigned_at?: string;
+        };
+        Update: {
+          aluno_id?: string;
+          material_id?: string;
+          assigned_by?: string | null;
         };
         Relationships: [];
       };

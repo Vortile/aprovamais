@@ -32,7 +32,7 @@ export default async function FinanceiroPage() {
         .order("monthly_amount", { ascending: true }),
       supabase
         .from(TABLES.ALUNOS)
-        .select("id, plan_id, profiles(full_name)")
+        .select("id, monthly_amount, profiles(full_name)")
         .order("created_at", { ascending: false }),
     ]);
 

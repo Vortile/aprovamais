@@ -20,7 +20,8 @@ const saveAlunoSchema = z.object({
     .trim()
     .email("Informe um email válido")
     .or(z.literal("")),
-  planId: z.string().uuid("Selecione um plano"),
+  monthlyAmount: z.string().trim().optional(),
+  address: z.string().trim().optional(),
   grade: z.string().trim().min(1, "Informe a série"),
   subjectFocus: z.string().trim(),
   notes: z.string().trim(),
@@ -39,7 +40,7 @@ type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type AlunoRow = Database["public"]["Tables"]["alunos"]["Row"];
 type AlunoWithProfileRow = Pick<
   AlunoRow,
-  "id" | "profile_id" | "plan_id" | "contact_email"
+  "id" | "profile_id" | "contact_email"
 > & {
   profiles: Pick<
     ProfileRow,
@@ -130,7 +131,7 @@ async function findAluno(alunoId: string) {
   const { data, error } = await supabase
     .from(TABLES.ALUNOS)
     .select(
-      "id, profile_id, plan_id, contact_email, profiles(id, clerk_user_id, email, full_name, role)",
+      "id, profile_id, contact_email, profiles(id, clerk_user_id, email, full_name, role)",
     )
     .eq("id", alunoId)
     .single();
@@ -371,9 +372,21 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
     };
   }
 
+  const { session } = adminAccess;
+
+  if (session.profile.role === ROLES.PROFESSOR && !values.data.alunoId) {
+    return {
+      ok: false,
+      error: "Apenas administradores podem adicionar novos alunos.",
+    };
+  }
+
   const normalizedEmail = normalizeEmail(values.data.contactEmail);
   const fullName = values.data.fullName || null;
-  const planId = values.data.planId;
+  const monthlyAmount = values.data.monthlyAmount
+    ? parseFloat(values.data.monthlyAmount)
+    : null;
+  const address = values.data.address || null;
   const subjectFocus = getSubjectList(values.data.subjectFocus);
   const supabase = createAdminClient();
 
@@ -394,10 +407,8 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
     }
   }
 
-  let profileId = currentAluno?.profile_id ?? null;
-  let successMessage = values.data.alunoId
-    ? "Aluno atualizado."
-    : "Aluno criado.";
+  // ─── Step 1: read-only Clerk lookups (no mutations yet) ──────────────────
+  let clerkUser: ClerkUserRecord | null = null;
 
   if (normalizedEmail) {
     const emailProfile = await findProfileByEmail(normalizedEmail);
@@ -446,14 +457,16 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
       };
     }
 
-    const clerkUser = currentClerkUser ?? matchedClerkUser;
+    clerkUser = currentClerkUser ?? matchedClerkUser;
+  }
 
-    if (clerkUser) {
-      await syncClerkUser({ user: clerkUser, normalizedEmail, fullName });
-    } else {
-      await createAlunoInvitation(normalizedEmail, fullName);
-    }
+  // ─── Step 2: all DB writes ────────────────────────────────────────────────
+  let profileId = currentAluno?.profile_id ?? null;
 
+  if (normalizedEmail) {
+    // Upsert profile with clerk_user_id if we already know it (existing user).
+    // For new invites clerkUser is null — profile is created without clerk_user_id
+    // ("Convite pendente") and linked later when the student signs up.
     const profile = await upsertAlunoProfile({
       currentProfileId: currentAluno?.profile_id ?? null,
       normalizedEmail,
@@ -470,22 +483,10 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
     }
 
     profileId = profile.id;
-
-    if (clerkUser && currentAluno?.profile_id) {
-      successMessage = "Conta do aluno atualizada.";
-    } else if (clerkUser) {
-      successMessage = "Conta existente vinculada ao aluno.";
-    } else {
-      successMessage = "Convite enviado e conta vinculada ao aluno.";
-    }
   } else if (currentAluno?.profile_id) {
     const { error } = await supabase
       .from(TABLES.PROFILES)
-      .update(
-        asSupabaseUpdate<"profiles">({
-          full_name: fullName,
-        }),
-      )
+      .update(asSupabaseUpdate<"profiles">({ full_name: fullName }))
       .eq("id", currentAluno.profile_id);
 
     if (error) {
@@ -502,7 +503,8 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
       .update(
         asSupabaseUpdate<"alunos">({
           profile_id: profileId,
-          plan_id: planId,
+          monthly_amount: monthlyAmount,
+          address: address,
           contact_email: normalizedEmail,
           grade: values.data.grade,
           subject_focus: subjectFocus,
@@ -515,21 +517,47 @@ export async function saveAluno(input: unknown): Promise<SaveAlunoResult> {
       return { ok: false, error: "Não foi possível atualizar o aluno." };
     }
   } else {
-    const isProfessor = adminAccess.session.profile.role === ROLES.PROFESSOR;
     const { error } = await supabase.from(TABLES.ALUNOS).insert(
       asSupabaseInsert<"alunos">({
         profile_id: profileId,
-        plan_id: planId,
+        monthly_amount: monthlyAmount,
+        address: address,
         contact_email: normalizedEmail,
         grade: values.data.grade,
         subject_focus: subjectFocus,
         notes: values.data.notes,
-        professor_id: isProfessor ? adminAccess.session.profile.id : null,
       }),
     );
 
     if (error) {
       return { ok: false, error: "Não foi possível criar o aluno." };
+    }
+  }
+
+  // ─── Step 3: Clerk mutations — only after all DB writes succeeded ─────────
+  // If this fails the student record already exists in the DB and the admin
+  // can simply save again to re-trigger the invite / sync.
+  let successMessage = values.data.alunoId
+    ? "Aluno atualizado."
+    : "Aluno criado.";
+
+  if (normalizedEmail) {
+    try {
+      if (clerkUser) {
+        await syncClerkUser({ user: clerkUser, normalizedEmail, fullName });
+        successMessage = currentAluno?.profile_id
+          ? "Conta do aluno atualizada."
+          : "Conta existente vinculada ao aluno.";
+      } else {
+        await createAlunoInvitation(normalizedEmail, fullName);
+        successMessage = "Convite enviado ao aluno.";
+      }
+    } catch {
+      // Clerk failed after the DB already committed — non-fatal.
+      // The student record is saved; the admin can re-save to retry the invite.
+      successMessage = values.data.alunoId
+        ? "Aluno atualizado, mas o envio do convite falhou. Salve novamente para reenviar."
+        : "Aluno criado, mas o envio do convite falhou. Salve novamente para reenviar.";
     }
   }
 

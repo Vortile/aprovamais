@@ -15,6 +15,7 @@ import { ACTION_ERRORS } from "@/lib/errors";
 const saveProfessorSchema = z.object({
   fullName: z.string().trim().min(2, "Nome deve ter ao menos 2 caracteres"),
   email: z.string().trim().email("Informe um email válido"),
+  address: z.string().trim().optional(),
 });
 
 const profileIdSchema = z.string().uuid();
@@ -138,6 +139,7 @@ export async function saveProfessor(input: unknown): Promise<ActionResult> {
       full_name: values.data.fullName,
       role: "professor",
       clerk_user_id: null,
+      address: values.data.address || null,
     }),
   );
 

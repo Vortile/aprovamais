@@ -28,7 +28,7 @@ import type { Database } from "@repo/db";
 
 type AlunoResumo = Pick<
   Database["public"]["Tables"]["alunos"]["Row"],
-  "id" | "plan_id"
+  "id" | "monthly_amount"
 > & {
   profiles: { full_name: string | null } | null;
 };
