@@ -1,1 +1,66 @@
-aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAibmV4dC9zZXJ2ZXIiOwppbXBvcnQgeyBjcmVhdGVBZG1pbkNsaWVudCwgaGFzU3VwYWJhc2VBZG1pbkVudiB9IGZyb20gIkAvbGliL3N1cGFiYXNlL2FkbWluIjsKCmV4cG9ydCBjb25zdCBkeW5hbWljID0gImZvcmNlLWR5bmFtaWMiOwoKYXN5bmMgZnVuY3Rpb24gY2hlY2tEYXRhYmFzZSgpOiBQcm9taXNlPHsKICBvazogYm9vbGVhbjsKICBsYXRlbmN5TXM6IG51bWJlciB8IG51bGw7CiAgZXJyb3I/OiBzdHJpbmc7Cn0+IHsKICBpZiAoIWhhc1N1cGFiYXNlQWRtaW5FbnYoKSkgewogICAgcmV0dXJuIHsKICAgICAgb2s6IGZhbHNlLAogICAgICBsYXRlbmN5TXM6IG51bGwsCiAgICAgIGVycm9yOiAiVmFyacOhdmVpcyBkZSBhbWJpZW50ZSBkbyBTdXBhYmFzZSBuw6NvIGNvbmZpZ3VyYWRhcy4iLAogICAgfTsKICB9CgogIGNvbnN0IHN0YXJ0ID0gRGF0ZS5ub3coKTsKICB0cnkgewogICAgY29uc3QgY2xpZW50ID0gY3JlYXRlQWRtaW5DbGllbnQoKTsKICAgIC8vIEZheiBhbWEgcXVlcnkgbGV2ZSBwYXJhIHZlcmlmaWNhciBzZSBvIGJhbmNvIGVzdMOhIHJlc3BvbmRlbmRvCiAgICBjb25zdCB7IGVycm9yIH0gPSBhd2FpdCBjbGllbnQKICAgICAgLmZyb20oInByb2ZpbGVzIikKICAgICAgLnNlbGVjdCgiaWQiKQogICAgICAubGltaXQoMSkKICAgICAgLm1heWJlU2luZ2xlKCk7CgogICAgY29uc3QgbGF0ZW5jeU1zID0gRGF0ZS5ub3coKSAtIHN0YXJ0OwoKICAgIGlmIChlcnJvcikgewogICAgICByZXR1cm4geyBvazogZmFsc2UsIGxhdGVuY3lNcywgZXJyb3I6IGVycm9yLm1lc3NhZ2UgfTsKICAgIH0KCiAgICByZXR1cm4geyBvazogdHJ1ZSwgbGF0ZW5jeU1zIH07CiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zdCBsYXRlbmN5TXMgPSBEYXRlLm5vdygpIC0gc3RhcnQ7CiAgICBjb25zdCBtZXNzYWdlID0KICAgICAgZXJyIGluc3RhbmNlb2YgRXJyb3IgPyBlcnIubWVzc2FnZSA6ICJFcnJvIGRlc2NvbmhlY2lkbyBhbyBjb25lY3Rhci4iOwogICAgcmV0dXJuIHsgb2s6IGZhbHNlLCBsYXRlbmN5TXMsIGVycm9yOiBtZXNzYWdlIH07CiAgfQp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gR0VUKCkgewogIGNvbnN0IGRiID0gYXdhaXQgY2hlY2tEYXRhYmFzZSgpOwoKICBjb25zdCBzdGF0dXMgPSB7CiAgICBzdGF0dXM6IGRiLm9rID8gImhlYWx0aHkiIDogInVuaGVhbHRoeSIsCiAgICB0aW1lc3RhbXA6IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKSwKICAgIHNlcnZpY2VzOiB7CiAgICAgIGRhdGFiYXNlOiB7CiAgICAgICAgb2s6IGRiLm9rLAogICAgICAgIGxhdGVuY3lNczogZGIubGF0ZW5jeU1zLAogICAgICAgIC4uLihkYi5lcnJvciA/IHsgZXJyb3I6IGRiLmVycm9yIH0gOiB7fSksCiAgICAgIH0sCiAgICB9LAogIH07CgogIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbihzdGF0dXMsIHsKICAgIHN0YXR1czogZGIub2sgPyAyMDAgOiA1MDMsCiAgICBoZWFkZXJzOiB7CiAgICAgIC8vIE51bmNhIGNhY2hlYXIg4oCUIHNlbXByZSB2ZXJpZmljYXIgZW0gdGVtcG8gcmVhbAogICAgICAiQ2FjaGUtQ29udHJvbCI6ICJuby1zdG9yZSwgbm8tY2FjaGUsIG11c3QtcmV2YWxpZGF0ZSIsCiAgICB9LAogIH0pOwp9Cg==
+import { NextResponse } from "next/server";
+import { createAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
+
+async function checkDatabase(): Promise<{
+  ok: boolean;
+  latencyMs: number | null;
+  error?: string;
+}> {
+  if (!hasSupabaseAdminEnv()) {
+    return {
+      ok: false,
+      latencyMs: null,
+      error: "Variáveis de ambiente do Supabase não configuradas.",
+    };
+  }
+
+  const start = Date.now();
+  try {
+    const client = createAdminClient();
+    // Faz uma query leve para verificar se o banco está respondendo
+    const { error } = await client
+      .from("profiles")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+
+    const latencyMs = Date.now() - start;
+
+    if (error) {
+      return { ok: false, latencyMs, error: error.message };
+    }
+
+    return { ok: true, latencyMs };
+  } catch (err) {
+    const latencyMs = Date.now() - start;
+    const message =
+      err instanceof Error ? err.message : "Erro desconhecido ao conectar.";
+    return { ok: false, latencyMs, error: message };
+  }
+}
+
+export async function GET() {
+  const db = await checkDatabase();
+
+  const status = {
+    status: db.ok ? "healthy" : "unhealthy",
+    timestamp: new Date().toISOString(),
+    services: {
+      database: {
+        ok: db.ok,
+        latencyMs: db.latencyMs,
+        ...(db.error ? { error: db.error } : {}),
+      },
+    },
+  };
+
+  return NextResponse.json(status, {
+    status: db.ok ? 200 : 503,
+    headers: {
+      // Nunca cachear — sempre verificar em tempo real
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+    },
+  });
+}
