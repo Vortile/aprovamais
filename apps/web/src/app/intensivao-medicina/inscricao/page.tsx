@@ -7,7 +7,7 @@ import { getEventoStatus } from "@/lib/evento/queries";
 import { TrackPageView } from "../_components/track-page-view";
 import { InscricaoForm } from "./inscricao-form";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export const metadata: Metadata = {
   title: "Inscrição — Intensivão ENEM 2026 Medicina | Aprova+",

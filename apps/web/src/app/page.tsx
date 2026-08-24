@@ -9,7 +9,7 @@ import Image from "next/image";
 
 const { zcalUrl, portalUrl } = teacher;
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function WebHomePage() {
   const eventoStatus = await getEventoStatus();
