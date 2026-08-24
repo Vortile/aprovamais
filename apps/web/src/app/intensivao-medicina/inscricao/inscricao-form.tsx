@@ -206,23 +206,168 @@ export function InscricaoForm({ precoReais }: { precoReais: number }) {
 
   if (step === "confirmado") {
     return (
-      <div className="bg-surface-container-low rounded-3xl p-10 text-center space-y-4">
-        <span className="material-symbols-outlined text-6xl text-primary">
-          check_circle
-        </span>
-        <h2 className="text-2xl font-bold text-on-surface">
-          Pagamento confirmado! Vaga garantida 🎉
-        </h2>
-        {confirmacao?.turmaAlocada && (
-          <p className="text-on-surface-variant text-lg">
-            Você ficou na <strong>Turma {confirmacao.turmaAlocada}</strong> (
-            {confirmacao.horarioTurma})
+      <div className="bg-surface-container-low rounded-3xl p-6 md:p-10 space-y-8 border border-outline-variant/10 shadow-lg print:border-none print:shadow-none print:p-0">
+        {/* Print-only CSS style */}
+        <style font-sans>{`
+          @media print {
+            nav, footer, button, .print\\:hidden { display: none !important; }
+            body { background: white !important; color: black !important; }
+          }
+        `}</style>
+
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 mx-auto">
+            <span className="material-symbols-outlined text-4xl">
+              check_circle
+            </span>
+          </div>
+          <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">
+            Pagamento Confirmado
           </p>
-        )}
-        <p className="text-on-surface-variant">
-          Enviamos o seu ingresso com QR Code para o e-mail informado. Verifique
-          também a caixa de spam.
-        </p>
+          <h2 className="text-2xl md:text-3xl font-headline font-bold text-on-surface">
+            Vaga garantida no Intensivão! 🎉
+          </h2>
+          <p className="text-on-surface-variant text-sm max-w-md mx-auto">
+            Sua inscrição foi confirmada com sucesso. Enviamos o ingresso
+            digital com QR Code para <strong>{values.emailAluno}</strong>.
+          </p>
+        </div>
+
+        {/* Card de Resumo do Ingresso */}
+        <div className="bg-surface rounded-2xl p-6 border border-outline-variant/20 space-y-6 text-left">
+          <div className="grid sm:grid-cols-2 gap-4 pb-4 border-b border-outline-variant/10">
+            <div>
+              <span className="text-xs text-on-surface-variant font-medium block">
+                Aluno Inscrito
+              </span>
+              <span className="font-bold text-on-surface text-base">
+                {values.nomeAluno || "Aluno"}
+              </span>
+              <span className="text-xs text-on-surface-variant block">
+                CPF: {values.cpfAluno}
+              </span>
+            </div>
+            <div>
+              <span className="text-xs text-on-surface-variant font-medium block">
+                Turma & Horário Alocado
+              </span>
+              <span className="font-bold text-primary text-base">
+                {confirmacao?.turmaAlocada
+                  ? `Turma ${confirmacao.turmaAlocada} (${confirmacao.horarioTurma})`
+                  : "Turma 1 (08:00 às 10:00)"}
+              </span>
+              <span className="text-xs text-on-surface-variant block">
+                Sala: {evento.salaTurma1}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <span className="text-xs text-on-surface-variant font-medium block uppercase tracking-wider">
+              Código do Ingresso
+            </span>
+            <div className="flex items-center justify-between bg-surface-container rounded-xl p-3">
+              <span className="font-mono font-bold text-sm text-on-surface select-all">
+                {confirmacao?.codigoIngresso || "ING-2026-MED"}
+              </span>
+              <span className="text-xs text-emerald-700 font-bold bg-emerald-100 px-2.5 py-1 rounded-md">
+                CONFIRMADO
+              </span>
+            </div>
+          </div>
+
+          {/* Datas dos Sábados */}
+          <div className="space-y-2 pt-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-on-surface block">
+              Calendário dos 4 Sábados Presenciais:
+            </span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+              <div className="bg-surface-container p-2.5 rounded-xl">
+                <span className="font-bold text-primary block">Sábado 1</span>
+                <span>12/09 · 2h</span>
+              </div>
+              <div className="bg-surface-container p-2.5 rounded-xl">
+                <span className="font-bold text-primary block">Sábado 2</span>
+                <span>19/09 · 2h</span>
+              </div>
+              <div className="bg-surface-container p-2.5 rounded-xl">
+                <span className="font-bold text-primary block">Sábado 3</span>
+                <span>26/09 · 2h</span>
+              </div>
+              <div className="bg-surface-container p-2.5 rounded-xl">
+                <span className="font-bold text-primary block">Sábado 4</span>
+                <span>03/10 · 2h</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Localização e Mapa */}
+          <div className="space-y-3 pt-2">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-on-surface block">
+                Localização do Evento:
+              </span>
+              <p className="text-sm font-semibold text-on-surface">
+                {evento.localNome}
+              </p>
+              <p className="text-xs text-on-surface-variant">
+                {evento.localEndereco}
+              </p>
+            </div>
+
+            <div className="w-full h-48 rounded-xl overflow-hidden border border-outline-variant/20 bg-surface-container print:hidden">
+              <iframe
+                title="Mapa do Local"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.1037381014167!2d-60.01639!3d-3.06733!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x926c1000676451e5%3A0xb3eefdf000000000!2sOpen%20Laranjeiras%20Gallery!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={false}
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Informações de Suporte e Próximos Passos */}
+        <div className="bg-blue-50/60 dark:bg-blue-950/20 rounded-2xl p-5 text-left text-xs space-y-2 border border-blue-200/50">
+          <p className="font-bold text-blue-900 dark:text-blue-200 text-sm">
+            📩 Próximos passos e Acompanhamento:
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-300">
+            <li>
+              Verifique seu e-mail (inclusive caixa de spam) para visualizar seu
+              ingresso oficial.
+            </li>
+            <li>
+              Entraremos em contato pelo WhatsApp no número{" "}
+              <strong>{values.whatsappAluno}</strong> para adicionar você ao
+              grupo exclusivo da turma.
+            </li>
+            <li>
+              Dúvidas ou suporte pré-evento? Telefone / WhatsApp:{" "}
+              <strong>(92) 98158-1955</strong>.
+            </li>
+          </ul>
+        </div>
+
+        {/* Ações: Imprimir e Voltar */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 print:hidden">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="w-full sm:w-auto bg-primary hover:bg-blue-700 text-on-primary px-6 py-3.5 rounded-xl font-bold text-sm inline-flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-md"
+          >
+            <span className="material-symbols-outlined text-lg">print</span>
+            Imprimir / Salvar Ingresso (PDF)
+          </button>
+          <a
+            href="/intensivao-medicina"
+            className="w-full sm:w-auto bg-surface-container hover:bg-surface-container-high text-on-surface px-6 py-3.5 rounded-xl font-bold text-sm inline-flex items-center justify-center transition-colors"
+          >
+            Voltar para a página principal
+          </a>
+        </div>
       </div>
     );
   }
@@ -232,11 +377,14 @@ export function InscricaoForm({ precoReais }: { precoReais: number }) {
       <div className="bg-surface-container-low rounded-3xl p-8 md:p-10 space-y-6">
         <div className="text-center space-y-1">
           <p className="text-sm font-bold uppercase tracking-widest text-tertiary">
-            Passo 2 de 2
+            Passo 2 de 2 — Escolha a forma de pagamento
           </p>
           <h2 className="text-2xl font-bold text-on-surface">
-            Pagamento — R$ {precoReais.toFixed(2).replace(".", ",")}
+            Investimento — R$ 500,00
           </h2>
+          <p className="text-xs text-on-surface-variant font-medium">
+            (à vista no Pix / cartão ou em até 10x de R$ 50,00)
+          </p>
         </div>
 
         {!pixData && (
@@ -392,15 +540,21 @@ export function InscricaoForm({ precoReais }: { precoReais: number }) {
         <p className="text-center text-error font-medium">{formError}</p>
       )}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-full bg-tertiary hover:bg-blue-700 text-on-tertiary px-8 py-4 rounded-xl font-bold text-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-60 cursor-pointer"
-      >
-        {submitting
-          ? "Enviando..."
-          : `Continuar para o pagamento — R$ ${evento.precoReais}`}
-      </button>
+      <div className="space-y-2 pt-2">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full bg-tertiary hover:bg-blue-700 text-on-tertiary px-8 py-4 rounded-xl font-bold text-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-60 cursor-pointer"
+        >
+          {submitting
+            ? "Processando inscrição..."
+            : "Ir para o Pagamento — R$ 500"}
+        </button>
+        <p className="text-xs text-center text-on-surface-variant font-medium">
+          🔒 Inscrição rápida e 100% segura • Processado pelo Mercado Pago •
+          Ingresso instantâneo
+        </p>
+      </div>
     </form>
   );
 }

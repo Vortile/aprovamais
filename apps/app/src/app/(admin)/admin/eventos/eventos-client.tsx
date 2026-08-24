@@ -71,17 +71,27 @@ export function EventosClient({ data }: { data: EventoDashboardData }) {
   const [salaTurma1, setSalaTurma1] = useState(data.evento.sala_turma_1 ?? "");
   const [salaTurma2, setSalaTurma2] = useState(data.evento.sala_turma_2 ?? "");
   const [savingDatas, setSavingDatas] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("todos");
+
+  const pendingLeads = useMemo(() => {
+    return data.inscricoes.filter((r) => r.status_pagamento === "pendente");
+  }, [data.inscricoes]);
 
   const filteredInscricoes = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return data.inscricoes;
-    return data.inscricoes.filter(
-      (row) =>
+    return data.inscricoes.filter((row) => {
+      const matchesSearch =
+        !term ||
         row.nome_aluno.toLowerCase().includes(term) ||
         row.email_aluno.toLowerCase().includes(term) ||
-        row.cpf_aluno.includes(term),
-    );
-  }, [data.inscricoes, search]);
+        row.cpf_aluno.includes(term);
+
+      const matchesStatus =
+        statusFilter === "todos" || row.status_pagamento === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [data.inscricoes, search, statusFilter]);
 
   const maxFunil = Math.max(...Object.values(data.funil), 1);
 
@@ -272,9 +282,126 @@ export function EventosClient({ data }: { data: EventoDashboardData }) {
         </CardContent>
       </Card>
 
+      <Card className="border-amber-500/30 bg-amber-500/5">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <CardTitle className="text-lg font-bold flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <span className="material-symbols-outlined text-amber-600">
+                contact_phone
+              </span>
+              Leads Pendentes / Abandono ({pendingLeads.length})
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Alunos que preencheram os dados no formulário mas ainda não
+              concluíram o pagamento. Entre em contato direto via WhatsApp para
+              ajudar na conversão.
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {pendingLeads.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-2">
+              Nenhum lead pendente no momento. Todos os interessados concluíram
+              a inscrição ou não há registros incompletos.
+            </p>
+          ) : (
+            <div className="overflow-x-auto mt-2">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Aluno / Contato</TableHead>
+                    <TableHead>CPF / Série</TableHead>
+                    <TableHead>Iniciado em</TableHead>
+                    <TableHead>Recuperação no WhatsApp</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingLeads.map((row) => {
+                    const cleanPhone = row.whatsapp_aluno.replace(/\D/g, "");
+                    const wppDigits = cleanPhone.startsWith("55")
+                      ? cleanPhone
+                      : `55${cleanPhone}`;
+                    const msg = encodeURIComponent(
+                      `Olá ${row.nome_aluno}, tudo bem? Vi que você iniciou sua inscrição no Intensivão ENEM Medicina do Aprova+. Ficou com alguma dúvida sobre o curso ou sobre o pagamento em até 10x de R$ 50 no cartão? Posso te ajudar!`,
+                    );
+                    const wppUrl = `https://wa.me/${wppDigits}?text=${msg}`;
+
+                    return (
+                      <TableRow key={row.id}>
+                        <TableCell>
+                          <div className="font-semibold text-sm">
+                            {row.nome_aluno}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {row.email_aluno}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            WhatsApp: {row.whatsapp_aluno}
+                          </div>
+                          {row.nome_responsavel && (
+                            <div className="text-[11px] text-amber-600 mt-0.5">
+                              Resp: {row.nome_responsavel} (
+                              {row.whatsapp_responsavel ?? "S/N"})
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <div>CPF: {row.cpf_aluno}</div>
+                          <div className="text-muted-foreground uppercase">
+                            Série: {row.serie_atual}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {new Date(row.created_at).toLocaleString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          <a
+                            href={wppUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-2 rounded-lg transition-colors shadow-sm"
+                          >
+                            <span className="material-symbols-outlined text-sm">
+                              chat
+                            </span>
+                            Chamar no WhatsApp
+                          </a>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <CardTitle>Inscrições</CardTitle>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium">
+              Filtrar por status:
+            </span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-background border border-input rounded-md px-2.5 py-1 text-xs font-semibold shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="todos">Todos os status</option>
+              <option value="aprovado">Aprovados</option>
+              <option value="pendente">Pendentes</option>
+              <option value="cancelado">Cancelados</option>
+              <option value="recusado">Recusados</option>
+            </select>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input

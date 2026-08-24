@@ -107,26 +107,32 @@ export default async function IntensivaoMedicinaPage() {
                     arrow_forward
                   </span>
                 </CtaLink>
-                <p className="text-sm font-bold text-on-surface-variant">
-                  {esgotado ? (
-                    <span className="text-error">
-                      Vagas esgotadas — as 26 vagas foram preenchidas
-                    </span>
-                  ) : vagasRestantes <= evento.limiarUrgenciaVagas ? (
-                    <>
-                      Restam apenas{" "}
-                      <span className="text-tertiary">
-                        {vagasRestantes} de {evento.limiteTotalVagas}
-                      </span>{" "}
-                      vagas
-                      {turma1Esgotada
-                        ? " — Turma 1 (08h às 10h) lotada, últimas vagas para a Turma 2 (10h às 12h)"
-                        : ""}
-                    </>
-                  ) : (
-                    "Vagas limitadas — turma pequena para manter o atendimento próximo ao aluno"
-                  )}
-                </p>
+                <div className="text-center md:text-left space-y-1">
+                  <p className="text-sm font-bold text-on-surface-variant">
+                    {esgotado ? (
+                      <span className="text-error">
+                        Vagas esgotadas — as 26 vagas foram preenchidas
+                      </span>
+                    ) : vagasRestantes <= evento.limiarUrgenciaVagas ? (
+                      <>
+                        Restam apenas{" "}
+                        <span className="text-tertiary">
+                          {vagasRestantes} de {evento.limiteTotalVagas}
+                        </span>{" "}
+                        vagas
+                        {turma1Esgotada
+                          ? " — Turma 1 (08h às 10h) lotada, últimas vagas para a Turma 2 (10h às 12h)"
+                          : ""}
+                      </>
+                    ) : (
+                      "Turma reduzida de alto rendimento em Manaus — vagas limitadas, inscreva-se antes que encerre!"
+                    )}
+                  </p>
+                  <p className="text-xs text-on-surface-variant/80 font-medium">
+                    🔒 Inscrição rápida em 1 min • R$ 500 à vista / Pix ou
+                    parcelado em até 10x no cartão
+                  </p>
+                </div>
               </div>
             </FadeIn>
 
@@ -195,26 +201,26 @@ export default async function IntensivaoMedicinaPage() {
             {[
               {
                 dia: "Sábado 1 · 12/09",
-                titulo: "Física + Matemática: base forte",
-                desc: "2h de imersão em Física e Matemática para identificar lacunas e organizar o raciocínio que mais pontua.",
+                titulo: "1º Encontro Presencial",
+                desc: "2h de imersão presencial com resolução e direcionamento cirúrgico em Física e Matemática.",
                 icon: "science",
               },
               {
                 dia: "Sábado 2 · 19/09",
-                titulo: "Questões e velocidade",
-                desc: "Física e Matemática aplicadas a questões do ENEM, com estratégias para interpretar e resolver melhor.",
+                titulo: "2º Encontro Presencial",
+                desc: "2h de imersão presencial focando no treinamento prático dos padrões de alto rendimento.",
                 icon: "calculate",
               },
               {
                 dia: "Sábado 3 · 26/09",
-                titulo: "Padrões que se repetem",
-                desc: "Revisão e resolução guiada dos padrões de Física e Matemática que mais aparecem na prova.",
+                titulo: "3º Encontro Presencial",
+                desc: "2h de imersão presencial com aprofundamento nos modelos e estratégias mais cobradas.",
                 icon: "account_tree",
               },
               {
                 dia: "Sábado 4 · 03/10",
-                titulo: "Reta final de alto rendimento",
-                desc: "Aprimoramento final de Física e Matemática, consolidando métodos, atalhos e prioridades para a reta final do ENEM.",
+                titulo: "4º Encontro Presencial",
+                desc: "2h de imersão presencial para consolidação de métodos, atalhos e alinhamento final.",
                 icon: "trending_up",
               },
             ].map((sabado) => (
@@ -373,26 +379,40 @@ export default async function IntensivaoMedicinaPage() {
                 R$ {VALOR_TOTAL}
               </span>
             </div>
-            <div className="flex items-center justify-between bg-tertiary-container/30 -mx-8 -mb-8 mt-4 px-8 py-6 rounded-b-3xl">
-              <span className="font-bold text-lg text-on-surface">
-                Seu investimento hoje
-              </span>
-              <span className="font-black text-3xl text-tertiary">
-                R$ {evento.precoReais}
-              </span>
+            <div className="flex flex-col sm:flex-row items-center justify-between bg-tertiary-container/30 -mx-8 -mb-8 mt-4 px-8 py-6 rounded-b-3xl gap-4">
+              <div className="text-left">
+                <span className="font-bold text-lg text-on-surface block">
+                  Seu investimento total
+                </span>
+                <span className="text-xs text-on-surface-variant font-medium">
+                  Ou até 10x de R$ 50,00 no cartão de crédito
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="font-black text-3xl text-tertiary block">
+                  R$ 500,00
+                </span>
+                <span className="text-xs text-tertiary font-bold uppercase tracking-wider">
+                  à vista no Pix ou cartão
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="text-center mt-10">
+          <div className="text-center mt-10 space-y-3">
             <CtaLink
               href="/intensivao-medicina/inscricao"
               className="bg-tertiary hover:bg-blue-700 cursor-pointer text-on-tertiary px-10 py-5 rounded-xl font-bold text-lg text-center hover:shadow-xl transition-all active:scale-95 inline-flex items-center gap-2"
             >
               {esgotado
                 ? "Entrar na Lista de Espera"
-                : "Garantir Minha Vaga Agora"}
+                : "Garantir Minha Vaga — R$ 500"}
               <span className="material-symbols-outlined">arrow_forward</span>
             </CtaLink>
+            <p className="text-xs text-on-surface-variant font-medium">
+              🔒 Inscrição rápida em 1 min • Pagamento 100% seguro pelo Mercado
+              Pago
+            </p>
           </div>
         </section>
 
@@ -404,23 +424,75 @@ export default async function IntensivaoMedicinaPage() {
           <FaqAccordion />
         </section>
 
-        {/* ── Local / Contato ── */}
-        <section className="bg-surface-container-low py-16 px-6 rounded-t-[3.5rem]">
-          <div className="max-w-3xl mx-auto text-center space-y-3">
-            <h2 className="text-2xl font-headline font-bold text-on-surface">
-              {evento.localNome}
-            </h2>
-            <p className="text-on-surface-variant">{evento.localEndereco}</p>
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block text-primary font-bold underline"
-            >
-              Dúvidas? Fale conosco: {evento.localContato}
-            </a>
+        {/* ── Local / Contato / Mapa ── */}
+        <section
+          className="bg-surface-container-low py-16 px-6 rounded-t-[3.5rem]"
+          id="local"
+        >
+          <div className="max-w-4xl mx-auto text-center space-y-6">
+            <div className="space-y-2">
+              <span className="px-4 py-1.5 rounded-full bg-primary-container/30 text-primary font-bold text-xs uppercase tracking-widest inline-block">
+                Localização das Aulas Presenciais
+              </span>
+              <h2 className="text-3xl font-headline font-bold text-on-surface">
+                {evento.localNome}
+              </h2>
+              <p className="text-on-surface-variant text-base max-w-xl mx-auto">
+                {evento.localEndereco}
+              </p>
+            </div>
+
+            {/* Embedded Google Maps */}
+            <div className="w-full h-80 rounded-3xl overflow-hidden shadow-lg border-2 border-outline-variant/20 bg-surface-container">
+              <iframe
+                title="Google Maps - Local do Intensivão ENEM Medicina"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.1037381014167!2d-60.01639!3d-3.06733!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x926c1000676451e5%3A0xb3eefdf000000000!2sOpen%20Laranjeiras%20Gallery!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={false}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a
+                href="https://maps.google.com/?q=Open+Laranjeiras+Gallery+Flores+Manaus"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-surface hover:bg-surface-container text-on-surface font-bold text-sm px-6 py-3 rounded-xl border border-outline-variant/20 shadow-sm transition-all"
+              >
+                <span className="material-symbols-outlined text-primary">
+                  map
+                </span>
+                Abrir no Google Maps
+              </a>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-primary font-bold text-sm underline hover:text-blue-800"
+              >
+                Dúvidas sobre a localização? Fale conosco: {evento.localContato}
+              </a>
+            </div>
           </div>
         </section>
+
+        {/* ── Sticky Floating WhatsApp Button ── */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-5 py-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer border-2 border-white/20"
+            aria-label="Falar no WhatsApp"
+          >
+            <span className="material-symbols-outlined text-2xl">chat</span>
+            <span className="hidden sm:inline">Dúvidas? Fale no WhatsApp</span>
+          </a>
+        </div>
       </main>
     </>
   );
