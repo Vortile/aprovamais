@@ -102,7 +102,7 @@ export default async function IntensivaoMedicinaPage() {
                 >
                   {esgotado
                     ? "Entrar na Lista de Espera"
-                    : "Garantir Minha Vaga — R$ 500"}
+                    : "Garantir Minha Vaga — R$ 399"}
                   <span className="material-symbols-outlined">
                     arrow_forward
                   </span>
@@ -129,7 +129,7 @@ export default async function IntensivaoMedicinaPage() {
                     )}
                   </p>
                   <p className="text-xs text-on-surface-variant/80 font-medium">
-                    🔒 Inscrição rápida em 1 min • R$ 500 à vista / Pix ou
+                    🔒 Inscrição rápida em 1 min • R$ 399 à vista / Pix ou
                     parcelado em até 10x no cartão
                   </p>
                 </div>
@@ -385,12 +385,12 @@ export default async function IntensivaoMedicinaPage() {
                   Seu investimento total
                 </span>
                 <span className="text-xs text-on-surface-variant font-medium">
-                  Ou até 10x de R$ 50,00 no cartão de crédito
+                  Ou até 10x de R$ 39,90 no cartão de crédito
                 </span>
               </div>
               <div className="text-right">
                 <span className="font-black text-3xl text-tertiary block">
-                  R$ 500,00
+                  R$ 399,00
                 </span>
                 <span className="text-xs text-tertiary font-bold uppercase tracking-wider">
                   à vista no Pix ou cartão
@@ -406,7 +406,7 @@ export default async function IntensivaoMedicinaPage() {
             >
               {esgotado
                 ? "Entrar na Lista de Espera"
-                : "Garantir Minha Vaga — R$ 500"}
+                : "Garantir Minha Vaga — R$ 399"}
               <span className="material-symbols-outlined">arrow_forward</span>
             </CtaLink>
             <p className="text-xs text-on-surface-variant font-medium">

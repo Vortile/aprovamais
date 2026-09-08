@@ -27,7 +27,7 @@ describe("generateTicketEmailHtml", () => {
     horario_turma: "08:00 às 10:00",
     sala_alocada: "Sala HY",
     codigo_ingresso: "APROVA-MED-12345678",
-    valor_pago_centavos: 50000,
+    valor_pago_centavos: 39900,
     utm_source: null,
     utm_medium: null,
     utm_campaign: null,
@@ -39,7 +39,7 @@ describe("generateTicketEmailHtml", () => {
     const html = generateTicketEmailHtml({ inscricao: mockInscricao });
 
     expect(html).toContain("Ana");
-    expect(html).toContain("500,00");
+    expect(html).toContain("399,00");
     expect(html).toContain("Pagamento Confirmado");
     expect(html).toContain("Passaporte de Acesso Oficial");
   });

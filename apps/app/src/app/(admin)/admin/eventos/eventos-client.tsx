@@ -322,7 +322,7 @@ export function EventosClient({ data }: { data: EventoDashboardData }) {
                       ? cleanPhone
                       : `55${cleanPhone}`;
                     const msg = encodeURIComponent(
-                      `Olá ${row.nome_aluno}, tudo bem? Vi que você iniciou sua inscrição no Intensivão ENEM Medicina do Aprova+. Ficou com alguma dúvida sobre o curso ou sobre o pagamento em até 10x de R$ 50 no cartão? Posso te ajudar!`,
+                      `Olá ${row.nome_aluno}, tudo bem? Vi que você iniciou sua inscrição no Intensivão ENEM Medicina do Aprova+. Ficou com alguma dúvida sobre o curso ou sobre o pagamento em até 10x de R$ 39,90 no cartão? Posso te ajudar!`,
                     );
                     const wppUrl = `https://wa.me/${wppDigits}?text=${msg}`;
 

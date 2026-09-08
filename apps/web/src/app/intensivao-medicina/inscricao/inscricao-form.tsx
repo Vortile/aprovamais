@@ -380,10 +380,10 @@ export function InscricaoForm({ precoReais }: { precoReais: number }) {
             Passo 2 de 2 — Escolha a forma de pagamento
           </p>
           <h2 className="text-2xl font-bold text-on-surface">
-            Investimento — R$ 500,00
+            Investimento — R$ 399,00
           </h2>
           <p className="text-xs text-on-surface-variant font-medium">
-            (à vista no Pix / cartão ou em até 10x de R$ 50,00)
+            (à vista no Pix / cartão ou em até 10x de R$ 39,90)
           </p>
         </div>
 
@@ -548,7 +548,7 @@ export function InscricaoForm({ precoReais }: { precoReais: number }) {
         >
           {submitting
             ? "Processando inscrição..."
-            : "Ir para o Pagamento — R$ 500"}
+            : "Ir para o Pagamento — R$ 399"}
         </button>
         <p className="text-xs text-center text-on-surface-variant font-medium">
           🔒 Inscrição rápida e 100% segura • Processado pelo Mercado Pago •

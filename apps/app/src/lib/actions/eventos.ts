@@ -297,7 +297,7 @@ export async function enviarPreviewEmailAction(input: {
       sala_alocada:
         turma === 1 ? eventoConfig.salaTurma1 : eventoConfig.salaTurma2,
       codigo_ingresso: "APROVA-MED-TESTE-2026",
-      valor_pago_centavos: 50000,
+      valor_pago_centavos: 39900,
       utm_source: null,
       utm_medium: null,
       utm_campaign: null,

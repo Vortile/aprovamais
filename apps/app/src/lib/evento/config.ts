@@ -6,7 +6,7 @@
 export const evento = {
   slug: "intensivao-enem-medicina-2026",
   titulo: "Intensivão ENEM 2026 — Foco Medicina",
-  precoReais: 500,
+  precoReais: 399,
   limiteTotalVagas: 26,
   capacidadePorTurma: 13,
   limiarUrgenciaVagas: 10,
